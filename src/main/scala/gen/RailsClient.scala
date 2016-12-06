@@ -140,4 +140,9 @@ class RailsClient {
       }
   }
 
+  def shutdown() = {
+    throttler.shutdown()
+    wsClient.close()
+  }
+
 }

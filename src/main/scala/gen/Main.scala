@@ -15,10 +15,10 @@ import scala.util.control.NonFatal
 object Main {
 
   object RunConfig {
-    val doTheFetchingAndWritingToFile: Boolean = false
+    val doTheFetchingAndWritingToFile: Boolean = true
     val doTheReadingFileAndUpdatingRailsApp: Boolean = true
     val printThrowablesCollected: Boolean = false
-    val pagesToBeFetched: Int = 1
+    val pagesToBeFetched: Int = 3
   }
 
 
@@ -65,7 +65,8 @@ object Main {
       case NonFatal(t) =>
         logger(this).error("Something went wrong", t)
     } finally {
-      client.shutdown()
+      theMovieDbClient.shutdown()
+      railsClient.shutdown()
       executorService.shutdown()
     }
     logger(this).info("------ All done -------")
