@@ -15,7 +15,7 @@ import scala.util.control.NonFatal
 object Main {
 
   object RunConfig {
-    val doTheFetchingAndWritingToFile: Boolean = true
+    val doTheFetchingAndWritingToFile: Boolean = false
     val doTheReadingFileAndUpdatingRailsApp: Boolean = true
     val printThrowablesCollected: Boolean = false
     val pagesToBeFetched: Int = 1

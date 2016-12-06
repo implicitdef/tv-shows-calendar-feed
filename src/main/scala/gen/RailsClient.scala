@@ -50,7 +50,7 @@ object RailsClient {
 
 class RailsClient {
 
-  val host = "http://localhost:3000"
+  val host = "https://tv-shows-calendar-app.herokuapp.com"
 
   val wsClient = NingWSClient()
 
