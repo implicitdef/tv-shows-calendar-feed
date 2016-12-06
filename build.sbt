@@ -1,4 +1,4 @@
-name := """generation"""
+name := """tv-shows-calendar-feed"""
 
 version := "1.0"
 

@@ -10,8 +10,23 @@ import gen.utils.Pimp._
 import play.api.libs.json.Json
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 object Main {
+
+  object RunConfig {
+    val doTheFetchingAndWritingToFile: Boolean = true
+    val doTheReadingFileAndUpdatingRailsApp: Boolean = true
+    val printThrowablesCollected: Boolean = false
+    val pagesToBeFetched: Int = 1
+  }
+
+
+
+
+
+
+
 
   import Injection._
 
@@ -21,33 +36,40 @@ object Main {
 
   def launch: Unit = {
     try {
-      logger(this).info("Querying...")
-      val seriesWithSeasons = fetchingService.fetch(pagesToFetch = 3).await()
-      logger(this).info("Writing the JSON to the file...")
-      val jsonStr = Json.stringify(Json.toJson(seriesWithSeasons))
-      Files.write(Paths.get("data.json"), jsonStr.getBytes(StandardCharsets.UTF_8))
-
-
-      //logger(this).info("Reading the JSON from the file...")
-      //val seriesWithSeasons = Json.parse(scala.io.Source.fromFile("data.json").mkString).as[Seq[SerieWithSeasons]]
-
-
-      logger(this).info("Updating the rails app...")
-      railsUpdater.updateRails(seriesWithSeasons).await()
-      printCollectedThrowables(collector)
-      logger(this).info("Done")
-    }
-    finally {
+      logger(this).info("------ Starting ------")
+      if (RunConfig.doTheFetchingAndWritingToFile) {
+        logger(this).info("--- Fetching...")
+        val seriesWithSeasons = fetchingService.fetch(pagesToFetch = RunConfig.pagesToBeFetched).await()
+        logger(this).info("--- Fetching done")
+        logger(this).info("--- Writing the JSON to the file...")
+        val jsonStr = Json.stringify(Json.toJson(seriesWithSeasons))
+        Files.write(Paths.get("data.json"), jsonStr.getBytes(StandardCharsets.UTF_8))
+        logger(this).info("--- Writing the JSON done")
+      }
+      if (RunConfig.doTheReadingFileAndUpdatingRailsApp) {
+        logger(this).info("--- Reading the JSON from the file...")
+        val seriesWithSeasons = Json.parse(scala.io.Source.fromFile("data.json").mkString).as[Seq[SerieWithSeasons]]
+        logger(this).info("--- Reading the JSON done")
+        logger(this).info("--- Updating the rails app...")
+        railsUpdater.updateRails(seriesWithSeasons).await()
+        logger(this).info("--- Updating the rails app done")
+      }
+      if (RunConfig.printThrowablesCollected) {
+        logger(this).info("--- Printing collected throwables...")
+        collector.throwables.foreach { t =>
+          logger(this).info(t.getMessage)
+        }
+        logger(this).info("--- Printing collected throwables done")
+      }
+    } catch {
+      case NonFatal(t) =>
+        logger(this).error("Something went wrong", t)
+    } finally {
       client.shutdown()
       executorService.shutdown()
     }
+    logger(this).info("------ All done -------")
   }
 
-  private def printCollectedThrowables(collector: Collector) = {
-    logger(this).info(s"--- Warnings ---")
-    collector.throwables.foreach { t =>
-      logger(this).info(t.getMessage)
-    }
-  }
 
 }
