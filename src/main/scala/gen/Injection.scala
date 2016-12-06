@@ -9,7 +9,8 @@ import scala.concurrent.ExecutionContext
 object Injection {
 
   val executorService = Executors.newFixedThreadPool(10)
-  implicit val executionContext = ExecutionContext.fromExecutor(executorService)
+  //implicit val executionContext = ExecutionContext.fromExecutor(executorService)
+  implicit val executionContext = ExecutionContext.Implicits.global
   implicit val collector = new Collector
   val theMovieDbClient = new TheMovieDbClient
   val railsClient = new RailsClient

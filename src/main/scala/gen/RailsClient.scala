@@ -11,6 +11,8 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 import RailsClient._
 import akka.contrib.throttle.Throttler.Rate
+import play.api.libs.ws.{WSRequest, WSResponse}
+
 import scala.concurrent.duration._
 
 object RailsClient {
@@ -51,16 +53,15 @@ object RailsClient {
 class RailsClient {
 
   val host = "https://tv-shows-calendar-app.herokuapp.com"
-
+  val key = "zQSEZwSwVPao8hpZoX381NZGX".reverse
   val wsClient = NingWSClient()
 
-  val throttler = new HttpThrottler(Rate(100, 1.second))
-
+  val throttler = new HttpThrottler(Rate(1000, 1.second))
 
   def addOrUpdateSerie(serie: Serie)(implicit e: ExecutionContext): Future[Unit] = {
     val url = s"$host/shows"
     logger(this).info(s">> POST $url")
-    throttler.call(wsClient
+    call(wsClient
       .url(url)
       .withBody(Json.toJson(serie))
       .withMethod("POST")
@@ -69,7 +70,7 @@ class RailsClient {
         if (r.status == 409) {
           val url2 = s"$host/shows/${serie.id}"
           logger(this).info(s">> PUT $url2")
-          throttler.call(wsClient
+          call(wsClient
             .url(url2)
             .withBody(Json.toJson(serie))
             .withMethod("PUT")
@@ -79,6 +80,8 @@ class RailsClient {
                 err(s"Failed request to $url2, got ${r2.status} : ${r2.body}")
               else ()
             }
+        } else if (! (200 to 299).contains(r.status)) {
+          err(s"Failed request to $url, got ${r.status} : ${r.body}")
         } else Future.successful(())
       }
   }
@@ -86,7 +89,7 @@ class RailsClient {
   def addOrUpdateSeason(serie: Serie, season: Season)(implicit e: ExecutionContext): Future[Unit] = {
     val url = s"$host/shows/${serie.id}/seasons"
     logger(this).info(s">> POST $url")
-    throttler.call(wsClient
+    call(wsClient
       .url(url)
       .withBody(Json.toJson(season))
       .withMethod("POST")
@@ -95,7 +98,7 @@ class RailsClient {
         if (r.status == 409) {
           val url2 = s"$host/shows/${serie.id}/seasons/${season.number}"
           logger(this).info(s">> PUT $url2")
-          throttler.call(wsClient
+          call(wsClient
             .url(url2)
             .withBody(Json.toJson(season))
             .withMethod("PUT")
@@ -114,7 +117,7 @@ class RailsClient {
   def deleteSeasonsOfSerie(serie: Serie)(implicit e: ExecutionContext): Future[Unit] = {
     val url = s"$host/shows/${serie.id}/seasons"
     logger(this).info(s">> GET $url")
-    throttler.call(
+    call(
       wsClient
       .url(url)
     )
@@ -126,7 +129,7 @@ class RailsClient {
           Future.traverse(seasons){ season =>
             val url2 = s"$host/shows/${serie.id}/seasons/${season.number}"
             logger(this).info(s">> DELETE $url")
-            throttler.call(wsClient
+            call(wsClient
               .url(url2)
               .withMethod("DELETE")
             )
@@ -139,6 +142,11 @@ class RailsClient {
         }.map(_ => ())
       }
   }
+
+  def call(wsRequest: WSRequest): Future[WSResponse] = {
+    throttler.call(wsRequest.withQueryString("key" -> key))
+  }
+
 
   def shutdown() = {
     throttler.shutdown()
