@@ -14,3 +14,5 @@ libraryDependencies += "com.typesafe.play" %% "play-ws" % "2.4.3"
 
 libraryDependencies += "com.typesafe.akka" %% "akka-contrib" % "2.4.0"
 
+libraryDependencies += "com.github.mauricio" %% "postgresql-async" % "0.2.20"
+
