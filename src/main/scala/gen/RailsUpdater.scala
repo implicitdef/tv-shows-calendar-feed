@@ -31,23 +31,20 @@ class RailsUpdater {
 
   private def deleteSeasons(serie: Serie)(implicit e: ExecutionContext): Future[Unit] = {
     railsClient.getSeasonsOfSerie(serie).flatMap { seasons =>
-      seasons.foldLeft(fuccess){ case (previous, season) =>
-        previous.flatMap { _ =>
-          railsClient.deleteSeasonOfSerie(serie, season)
-        }
-      }
+      Future.traverse(seasons){ season =>
+        railsClient.deleteSeasonOfSerie(serie, season)
+      }.map(_ => ())
     }
   }
 
   private def addSeasons(serie: Serie, seasons: Seq[Season])(implicit e: ExecutionContext): Future[Unit] = {
-    seasons.foldLeft(fuccess){ case (previous, season) =>
-      previous.flatMap { _ =>
-        railsClient.addSeason(serie, season).map {
-          case Some(Conflict) => err("Got a conflict when adding a season, but that should not happened since we deleted them all")
-          case _ => ()
-        }
+    Future.traverse(seasons){ season =>
+      railsClient.addSeason(serie, season).map {
+        case Some(Conflict) =>
+          err("Got a conflict when adding a season, but that should not happened since we deleted them all")
+        case _ => ()
       }
-    }
+    }.map(_ => ())
   }
 
 }

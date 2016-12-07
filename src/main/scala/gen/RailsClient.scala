@@ -58,7 +58,6 @@ class RailsClient {
   private val host = "https://tv-shows-calendar-app.herokuapp.com"
   private val key = "zQSEZwSwVPao8hpZoX381NZGX".reverse
   private val wsClient = NingWSClient()
-  private val throttler = new HttpThrottler(Rate(50, 1.second))
 
   def addSerie(serie: Serie)(implicit e: ExecutionContext): Future[Option[Conflict.type]] = {
     callForMaybeConflict(wsClient
@@ -127,7 +126,11 @@ class RailsClient {
     // this will make retry when we receive a 503
     implicit val isSuccess = retry.Success[Either[Conflict.type, WSResponse]]{
       case Left(_) => true
-      case Right(res) => res.status != 503
+      case Right(res) =>
+        if (res.status == 503) {
+          logger(this).warn(s"Got 503 for ${req.url}")
+          false
+        } else true
     }
     retry.Backoff(max = 50)(timer).apply(() =>
       call(req)
@@ -140,11 +143,12 @@ class RailsClient {
 
   private def call(req: WSRequest)(implicit e: ExecutionContext): Future[Either[Conflict.type, WSResponse]] = {
     logger(this).info(s">> ${req.method} ${req.url}")
-    throttler.call(
-      req
-        .withQueryString("key" -> key)
-    ).map { res =>
+    req
+      .withQueryString("key" -> key)
+      .execute()
+      .map { res =>
       val status = res.status
+      logger(this).info(s"<< $status")
       if (status == 409) Left(Conflict)
       else if (!(200 to 299).contains(status)) {
         err(s"Failed request to ${req.url}, got $status : ${res.body}")
@@ -154,7 +158,6 @@ class RailsClient {
 
 
   def shutdown() = {
-    throttler.shutdown()
     wsClient.close()
   }
 
