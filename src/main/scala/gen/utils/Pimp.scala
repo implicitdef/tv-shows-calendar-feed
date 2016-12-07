@@ -38,4 +38,7 @@ object Pimp {
   def swallowing[T](exceptions: Class[_]*)(block: => T): Option[T] =
     catching(exceptions:_*).opt(block)
 
+  def fuccess = Future.successful(())
+
+
 }

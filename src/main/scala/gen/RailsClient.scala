@@ -48,6 +48,9 @@ object RailsClient {
         }
       }
   }
+
+  case object Conflict
+
 }
 
 class RailsClient {
@@ -56,16 +59,8 @@ class RailsClient {
   private val key = "zQSEZwSwVPao8hpZoX381NZGX".reverse
   private val wsClient = NingWSClient()
   private val throttler = new HttpThrottler(Rate(50, 1.second))
-  private case object Conflict
 
-  def addOrUpdateSerie(serie: Serie)(implicit e: ExecutionContext): Future[Unit] = {
-    addSerie(serie).flatMap {
-      case None => Future.successful(())
-      case Some(Conflict) => updateSerie(serie)
-    }
-  }
-
-  private def addSerie(serie: Serie)(implicit e: ExecutionContext): Future[Option[Conflict.type]] = {
+  def addSerie(serie: Serie)(implicit e: ExecutionContext): Future[Option[Conflict.type]] = {
     callForMaybeConflict(wsClient
       .url(s"$host/shows")
       .withBody(Json.toJson(serie))
@@ -73,7 +68,7 @@ class RailsClient {
     )
   }
 
-  private def updateSerie(serie: Serie)(implicit e: ExecutionContext): Future[Unit] = {
+  def updateSerie(serie: Serie)(implicit e: ExecutionContext): Future[Unit] = {
     callForUnit(wsClient
       .url(s"$host/shows/${serie.id}")
       .withBody(Json.toJson(serie))
@@ -81,14 +76,8 @@ class RailsClient {
     )
   }
 
-  def addOrUpdateSeason(serie: Serie, season: Season)(implicit e: ExecutionContext): Future[Unit] = {
-    addSeason(serie, season).flatMap {
-      case None => Future.successful(())
-      case Some(Conflict) => updateSeason(serie, season)
-    }
-  }
 
-  private def addSeason(serie: Serie, season: Season)(implicit e: ExecutionContext): Future[Option[Conflict.type]] = {
+  def addSeason(serie: Serie, season: Season)(implicit e: ExecutionContext): Future[Option[Conflict.type]] = {
     callForMaybeConflict(wsClient
       .url(s"$host/shows/${serie.id}/seasons")
       .withBody(Json.toJson(season))
@@ -96,7 +85,7 @@ class RailsClient {
     )
   }
 
-  private def updateSeason(serie: Serie, season: Season)(implicit e: ExecutionContext): Future[Unit] = {
+  def updateSeason(serie: Serie, season: Season)(implicit e: ExecutionContext): Future[Unit] = {
     callForUnit(wsClient
       .url(s"$host/shows/${serie.id}/seasons/${season.number}")
       .withBody(Json.toJson(season))
@@ -104,21 +93,14 @@ class RailsClient {
     )
   }
 
-  def deleteSeasonsOfSerie(serie: Serie)(implicit e: ExecutionContext): Future[Unit] = {
-    getSeasonsOfSerie(serie).flatMap { seasons =>
-      Future.traverse(seasons){ season =>
-        deleteSeasonOfSerie(serie, season)
-      }.map(_ => ())
-    }
-  }
 
-  private def getSeasonsOfSerie(serie: Serie)(implicit e: ExecutionContext): Future[Seq[Season]] = {
+  def getSeasonsOfSerie(serie: Serie)(implicit e: ExecutionContext): Future[Seq[Season]] = {
     callForRawResponse(wsClient
       .url(s"$host/shows/${serie.id}/seasons")
     ).map(_.json.as[Seq[Season]])
   }
 
-  private def deleteSeasonOfSerie(serie: Serie, season: Season)(implicit e: ExecutionContext): Future[Unit] = {
+  def deleteSeasonOfSerie(serie: Serie, season: Season)(implicit e: ExecutionContext): Future[Unit] = {
     callForUnit(wsClient
       .url(s"$host/shows/${serie.id}/seasons/${season.number}")
       .withMethod("DELETE")
