@@ -55,7 +55,7 @@ class RailsClient {
   private val host = "https://tv-shows-calendar-app.herokuapp.com"
   private val key = "zQSEZwSwVPao8hpZoX381NZGX".reverse
   private val wsClient = NingWSClient()
-  private val throttler = new HttpThrottler(Rate(1000, 1.second))
+  private val throttler = new HttpThrottler(Rate(100, 1.second))
   private case object Conflict
 
   def addOrUpdateSerie(serie: Serie)(implicit e: ExecutionContext): Future[Unit] = {

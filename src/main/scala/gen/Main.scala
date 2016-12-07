@@ -24,13 +24,6 @@ object Main {
     val maxSeriesToStore: Int = 1000
   }
 
-
-
-
-
-
-
-
   import Injection._
 
   def main(args: Array[String]): Unit = {
