@@ -2,21 +2,18 @@ package gen
 
 import java.time.LocalDate
 
+import akka.contrib.throttle.Throttler.Rate
 import gen.Domain.{Season, Serie, TimeRange}
+import gen.RailsClient._
 import gen.utils.Pimp._
+import odelay.jdk
 import play.api.libs.json.{Json, _}
 import play.api.libs.ws.ning.NingWSClient
-
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
-import RailsClient._
-import akka.contrib.throttle.Throttler.Rate
-import gen.utils.Collector
-import odelay.jdk
 import play.api.libs.ws.{WSRequest, WSResponse}
-import retry.Success
 
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 object RailsClient {
 
@@ -58,7 +55,7 @@ class RailsClient {
   private val host = "https://tv-shows-calendar-app.herokuapp.com"
   private val key = "zQSEZwSwVPao8hpZoX381NZGX".reverse
   private val wsClient = NingWSClient()
-  private val throttler = new HttpThrottler(Rate(100, 1.second))
+  private val throttler = new HttpThrottler(Rate(50, 1.second))
   private case object Conflict
 
   def addOrUpdateSerie(serie: Serie)(implicit e: ExecutionContext): Future[Unit] = {
