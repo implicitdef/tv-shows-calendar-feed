@@ -52,7 +52,7 @@ class DbAccessor {
         "INSERT INTO shows (id, name, created_at, updated_at) " +
         "VALUES " +
         series.map(_ => "(?, ?, NOW(), NOW())").mkString(", "),
-        values = series.map(serie => Seq(serie.id, serie.name))
+        values = series.flatMap(serie => Seq(serie.id, serie.name))
       )
     } yield ()
 
