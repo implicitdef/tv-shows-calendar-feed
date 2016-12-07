@@ -11,7 +11,10 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 import RailsClient._
 import akka.contrib.throttle.Throttler.Rate
+import gen.utils.Collector
+import odelay.jdk
 import play.api.libs.ws.{WSRequest, WSResponse}
+import retry.Success
 
 import scala.concurrent.duration._
 
@@ -125,20 +128,36 @@ class RailsClient {
     )
   }
 
+  private def callForUnit(req: WSRequest)(implicit e: ExecutionContext): Future[Unit] =
+    callForRawResponse(req).map(_ => ())
+
   private def callForMaybeConflict(req: WSRequest)(implicit e: ExecutionContext): Future[Option[Conflict.type]] = {
-    call(req).map( _.left.toOption)
+    callWithBackoff(req).map( _.left.toOption)
   }
 
   private def callForRawResponse(req: WSRequest)(implicit e: ExecutionContext): Future[WSResponse] = {
-    call(req)
+    callWithBackoff(req)
       .map {
       case Left(Conflict) => err(s"Got a 409 on ${req.method} ${req.url}, that should not be possible")
       case Right(response) => response
     }
   }
 
-  private def callForUnit(req: WSRequest)(implicit e: ExecutionContext): Future[Unit] =
-    callForRawResponse(req).map(_ => ())
+  private val timer = new jdk.JdkTimer(poolSize = 100)
+  private def callWithBackoff(req: WSRequest)(implicit e: ExecutionContext): Future[Either[Conflict.type, WSResponse]] = {
+    // this will make retry when we receive a 503
+    implicit val isSuccess = retry.Success[Either[Conflict.type, WSResponse]]{
+      case Left(_) => true
+      case Right(res) => res.status != 503
+    }
+    retry.Backoff(max = 50)(timer).apply(() =>
+      call(req)
+    )(isSuccess, e).map {
+      case Right(res) if res.status == 503 =>
+        err("Failed to prevent the 503 despite the retry")
+      case other => other
+    }
+  }
 
   private def call(req: WSRequest)(implicit e: ExecutionContext): Future[Either[Conflict.type, WSResponse]] = {
     logger(this).info(s">> ${req.method} ${req.url}")
@@ -153,6 +172,7 @@ class RailsClient {
       } else Right(res)
     }
   }
+
 
   def shutdown() = {
     throttler.shutdown()
