@@ -1,4 +1,4 @@
-package gen.utils
+package feed.utils
 
 import java.time.format.DateTimeParseException
 

@@ -1,13 +1,13 @@
-package gen
+package feed
 
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
-import gen.Domain.{Serie, TimeRange}
-import gen.TheMovieDbClient.SeasonEndpoint._
-import gen.TheMovieDbClient.{DiscoverEndpoint, SeasonEndpoint, TvShowEndpoint}
-import gen.utils.Collector
-import gen.utils.Pimp._
+import feed.Domain.{Serie, TimeRange}
+import feed.TheMovieDbClient.SeasonEndpoint._
+import feed.TheMovieDbClient.{DiscoverEndpoint, SeasonEndpoint, TvShowEndpoint}
+import feed.utils.Collector
+import feed.utils.Pimp._
 import odelay.jdk
 import play.api.libs.json._
 import play.api.libs.ws.ning.NingWSClient

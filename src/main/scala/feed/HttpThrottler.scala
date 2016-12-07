@@ -1,11 +1,11 @@
-package gen
+package feed
 
 import akka.actor.{Actor, Props, ActorSystem}
 import akka.contrib.throttle.Throttler.{SetTarget, Rate}
 import akka.contrib.throttle.TimerBasedThrottler
 import akka.util.Timeout
-import gen.HttpThrottler.HttpActor
-import gen.utils.Pimp._
+import feed.HttpThrottler.HttpActor
+import feed.utils.Pimp._
 import play.api.libs.ws.{WSResponse, WSRequest}
 import scala.concurrent.Future
 import scala.concurrent.duration._

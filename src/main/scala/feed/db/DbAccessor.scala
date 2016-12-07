@@ -1,10 +1,10 @@
-package gen.db
+package feed.db
 
 import com.github.mauricio.async.db.SSLConfiguration.Mode
 import com.github.mauricio.async.db.postgresql.PostgreSQLConnection
 import com.github.mauricio.async.db.{Configuration, SSLConfiguration}
-import gen.Domain.{Season, Serie}
-
+import feed.Domain.{Season, Serie}
+import feed.utils.Pimp._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -38,13 +38,25 @@ class DbAccessor {
     for {
       c <- futureConnection
       _ <- c.sendPreparedStatement(
-        "INSERT INTO show (id, name, created_at, updated_at) " +
+        "INSERT INTO shows (id, name, created_at, updated_at) " +
         "VALUES (?, ?, NOW(), NOW())",
         values = Seq(serie.id, serie.name)
       )
     } yield ()
 
-  def insertSeason(serie: Serie, season: Season): Future[Unit] =
+
+  def insertSeries(series: Seq[Serie]): Future[Unit] =
+    for {
+      c <- futureConnection
+      _ <- c.sendPreparedStatement(
+        "INSERT INTO shows (id, name, created_at, updated_at) " +
+        "VALUES " +
+        series.map(_ => "(?, ?, NOW(), NOW())").mkString(", "),
+        values = series.map(serie => Seq(serie.id, serie.name))
+      )
+    } yield ()
+
+  def insertSeason(serie: Serie, season: Season) =
     for {
       c <- futureConnection
       _ <- c.sendPreparedStatement(
@@ -53,5 +65,22 @@ class DbAccessor {
         values = Seq(serie.id, season.number, season.time.start, season.time.end)
       )
     } yield ()
+
+  def insertSeasons(seq: Seq[(Serie, Season)]) =
+    if (seq.isEmpty) fuccess
+    else {
+      for {
+        c <- futureConnection
+        _ <- c.sendPreparedStatement(
+          "INSERT INTO seasons (show_id, number, start_date, end_date, created_at, updated_at) " +
+           "VALUES " +
+            seq.map( _ => "(?, ?, ?, ?, NOW(), NOW())").mkString(", "),
+           values = seq.flatMap { case (serie, season) =>
+             Seq(serie.id, season.number, season.time.start, season.time.end)
+           }
+        )
+      } yield ()
+    }
+
 
 }

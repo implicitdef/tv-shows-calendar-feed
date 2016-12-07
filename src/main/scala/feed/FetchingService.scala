@@ -1,8 +1,8 @@
-package gen
+package feed
 
-import gen.Domain.{Season, SeasonWithSerie, Serie, SerieWithSeasons}
-import gen.utils.Collector
-import gen.utils.Pimp._
+import feed.Domain.{Season, SeasonWithSerie, Serie, SerieWithSeasons}
+import feed.utils.Collector
+import feed.utils.Pimp._
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}

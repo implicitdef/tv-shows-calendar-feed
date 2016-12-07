@@ -1,4 +1,4 @@
-package gen
+package feed
 
 import java.time.{LocalDate, LocalDateTime}
 

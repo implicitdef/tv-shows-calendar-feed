@@ -1,8 +1,8 @@
-package gen.utils
+package feed.utils
 
 
-import gen.Injection
-import gen.utils.Pimp._
+import feed.Injection
+import feed.utils.Pimp._
 import org.scalatest.{FreeSpec, Matchers}
 
 import scala.concurrent.duration._

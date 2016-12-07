@@ -1,12 +1,12 @@
-package gen
+package feed
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 import java.util.concurrent.Executors
 
-import gen.Domain._
-import gen.utils.Collector
-import gen.utils.Pimp._
+import feed.Domain._
+import feed.utils.Collector
+import feed.utils.Pimp._
 import play.api.libs.json.Json
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -62,7 +62,6 @@ object Main {
         logger(this).error("Something went wrong", t)
     } finally {
       theMovieDbClient.shutdown()
-      railsClient.shutdown()
     }
     logger(this).info("------ All done -------")
   }
