@@ -3,6 +3,7 @@ package gen.db
 import com.github.mauricio.async.db.SSLConfiguration.Mode
 import com.github.mauricio.async.db.postgresql.PostgreSQLConnection
 import com.github.mauricio.async.db.{Configuration, SSLConfiguration}
+import gen.Domain.{Season, Serie}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -18,27 +19,39 @@ class DbAccessor {
       database = Some("mmj9mevmuniocd".reverse),
       ssl = SSLConfiguration(mode = Mode.Require)
     )
+
   private lazy val futureConnection = new PostgreSQLConnection(configuration).connect
 
-
-  def deleteAllShows = ???
-  def deleteAllSeasons = ???
-
-  def insertShows = ???
-  def insertSeasons = ???
-
-  def testQuery: Future[Int] =
+  def deleteAllSeries: Future[Unit] =
     for {
       c <- futureConnection
-      queryResult <- c.sendQuery("SELECT 5")
-    } yield {
-      queryResult.rows match {
-        case Some(resultSet) => {
-          val row = resultSet.head
-          row(0).asInstanceOf[Int]
-        }
-        case None => -1
-      }
-    }
+      _ <- c.sendQuery("TRUNCATE shows")
+    } yield ()
+
+  def deleteAllSeasons: Future[Unit] =
+    for {
+      c <- futureConnection
+      _ <- c.sendQuery("TRUNCATE seasons")
+    } yield ()
+
+  def insertSerie(serie: Serie): Future[Unit] =
+    for {
+      c <- futureConnection
+      _ <- c.sendPreparedStatement(
+        "INSERT INTO show (id, name, created_at, updated_at) " +
+        "VALUES (?, ?, NOW(), NOW())",
+        values = Seq(serie.id, serie.name)
+      )
+    } yield ()
+
+  def insertSeason(serie: Serie, season: Season): Future[Unit] =
+    for {
+      c <- futureConnection
+      _ <- c.sendPreparedStatement(
+        "INSERT INTO seasons (show_id, number, start_date, end_date, created_at, updated_at) " +
+          "VALUES (?, ?, ?, ?, NOW(), NOW())",
+        values = Seq(serie.id, season.number, season.time.start, season.time.end)
+      )
+    } yield ()
 
 }

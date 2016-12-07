@@ -16,7 +16,7 @@ object Main {
 
   object RunConfig {
     val doTheFetchingAndWritingToFile: Boolean = false
-    val doTheReadingFileAndUpdatingRailsApp: Boolean = false
+    val doTheReadingFileAndUpdatingRailsApp: Boolean = true
     val printThrowablesCollected: Boolean = false
     val pagesToBeFetched: Int = 100
     // we observed that 1000 series means ~7160 rows to store (series + seasons)
@@ -32,10 +32,6 @@ object Main {
 
   def launch: Unit = {
     try {
-
-      val res = dbAccessor.testQuery.await()
-      logger(this).info(s"Got $res")
-
       logger(this).info("------ Starting ------")
       if (RunConfig.doTheFetchingAndWritingToFile) {
         logger(this).info("--- Fetching...")
