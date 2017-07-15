@@ -15,9 +15,9 @@ import scala.util.control.NonFatal
 object Main {
 
   object RunConfig {
-    val doTheFetchingAndWritingToFile: Boolean = true
+    val doTheFetchingAndWritingToFile: Boolean = false
     val doTheReadingFileAndUpdatingRailsApp: Boolean = false
-    val doTheReadingFileAndUpdatingLocalApp: Boolean = false
+    val doTheReadingFileAndUpdatingLocalApp: Boolean = true
     val printThrowablesCollected: Boolean = false
     val pagesToBeFetched: Int = 100
     // we observed that 1000 series means ~7160 rows to store (series + seasons)
