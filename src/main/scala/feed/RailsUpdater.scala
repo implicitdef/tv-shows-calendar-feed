@@ -9,9 +9,9 @@ class RailsUpdater {
   def updateRails(series: Seq[SerieWithSeasons])(implicit e: ExecutionContext): Future[Unit] = {
     logger(this).info("Deleting all seasons")
     for {
-      _ <- dbAccessor.deleteAllSeasons
+      _ <- classicDbAccessor.deleteAllSeasons
       _ = logger(this).info("Deleting all series")
-      _ <- dbAccessor.deleteAllSeries
+      _ <- classicDbAccessor.deleteAllSeries
       _ <- bulkInsertSeries(series)
       _ <- bulkInsertSeasons(series)
     } yield ()
@@ -21,7 +21,7 @@ class RailsUpdater {
     series.grouped(50).zipWithIndex.foldLeft(fuccess){ case (prev, (seriesGroup, idx)) =>
       prev.flatMap { _ =>
         logger(this).info(s"Inserting ${series.size} series ($idx)")
-        dbAccessor.insertSeries(seriesGroup.map(_.serie))
+        classicDbAccessor.insertSeries(seriesGroup.map(_.serie))
       }
     }
 
@@ -33,7 +33,7 @@ class RailsUpdater {
     }.grouped(50).zipWithIndex.foldLeft(fuccess){ case (prev, (seasonsGroup, idx)) =>
       prev.flatMap { _ =>
         logger(this).info(s"Inserting ${seasonsGroup.size} seasons ($idx)")
-        dbAccessor.insertSeasons(seasonsGroup)
+        classicDbAccessor.insertSeasons(seasonsGroup)
       }
     }
 

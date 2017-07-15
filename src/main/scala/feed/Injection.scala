@@ -1,6 +1,6 @@
 package feed
 
-import feed.db.DbAccessor
+import feed.db.{ClassicDbAccessor, NeoDbAccessor}
 import feed.utils.Collector
 
 import scala.concurrent.ExecutionContext
@@ -12,7 +12,8 @@ object Injection {
   val theMovieDbClient = new TheMovieDbClient
   val railsUpdater = new RailsUpdater
   val fetchingService = new FetchingService(theMovieDbClient)
-  val dbAccessor = new DbAccessor
+  val classicDbAccessor = new ClassicDbAccessor
+  val neoDbAccessor = new NeoDbAccessor
 
 
 }

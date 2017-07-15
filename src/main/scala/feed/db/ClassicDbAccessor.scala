@@ -7,16 +7,17 @@ import feed.Domain.{Season, Serie}
 import feed.utils.Pimp._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
-class DbAccessor {
+class ClassicDbAccessor {
 
   private val configuration =
     Configuration(
-      username = "bihujifleyfrzu".reverse,
-      host = "moc.swanozama.etupmoc.1-tsew-ue.201-59-742-45-2ce".reverse,
+      username = "iocjacmkxobsia".reverse,
+      host = "moc.swanozama.etupmoc.1-tsew-ue.091-932-57-45-2ce".reverse,
       port = 5432,
-      password = Some("9nT3aIw5Dtj4cf-bHuuYJM1kPZ".reverse),
-      database = Some("mmj9mevmuniocd".reverse),
+      password = Some("a8e6e398bebe3e9d6c9c43c8796afb9146d9a1d721f914a393c9e317b19f5e7e".reverse),
+      database = Some("1i9f80ge9ce31d".reverse),
       ssl = SSLConfiguration(mode = Mode.Require)
     )
 

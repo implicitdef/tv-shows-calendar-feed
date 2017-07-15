@@ -15,8 +15,9 @@ import scala.util.control.NonFatal
 object Main {
 
   object RunConfig {
-    val doTheFetchingAndWritingToFile: Boolean = false
-    val doTheReadingFileAndUpdatingRailsApp: Boolean = true
+    val doTheFetchingAndWritingToFile: Boolean = true
+    val doTheReadingFileAndUpdatingRailsApp: Boolean = false
+    val doTheReadingFileAndUpdatingLocalApp: Boolean = false
     val printThrowablesCollected: Boolean = false
     val pagesToBeFetched: Int = 100
     // we observed that 1000 series means ~7160 rows to store (series + seasons)
@@ -49,6 +50,14 @@ object Main {
         logger(this).info("--- Updating the rails app...")
         railsUpdater.updateRails(seriesWithSeasons.take(RunConfig.maxSeriesToStore)).await()
         logger(this).info("--- Updating the rails app done")
+      }
+      if (RunConfig.doTheReadingFileAndUpdatingLocalApp) {
+        logger(this).info("--- Reading the JSON from the file...")
+        val json = Json.parse(scala.io.Source.fromFile("data.json").mkString)
+        logger(this).info("--- Reading the JSON done")
+        logger(this).info("--- Inserting into the local db...")
+        neoDbAccessor.insertJson(json).await()
+        logger(this).info("--- Inserting done")
       }
       if (RunConfig.printThrowablesCollected) {
         logger(this).info("--- Printing collected throwables...")
