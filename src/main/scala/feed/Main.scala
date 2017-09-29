@@ -18,7 +18,7 @@ object Main {
   object RunConfig {
     val doTheFetchingAndWritingToFile: Boolean = false
     val doTheReadingFileAndUpdatingRailsApp: Boolean = false
-    val doTheReadingFileAndUpdatingLocalApp: Boolean = false
+    val doTheReadingFileAndUpdatingLocalApp: Boolean = true
     val doTheReadingFileAndUpdatingReworkNodeApp: Boolean = true
     val printThrowablesCollected: Boolean = false
     val pagesToBeFetched: Int = 100
