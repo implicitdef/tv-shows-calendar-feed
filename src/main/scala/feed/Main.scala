@@ -8,6 +8,7 @@ import feed.Domain._
 import feed.utils.Collector
 import feed.utils.Pimp._
 import play.api.libs.json.Json
+import feed.db.NeoDbAccessor
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
@@ -17,7 +18,8 @@ object Main {
   object RunConfig {
     val doTheFetchingAndWritingToFile: Boolean = false
     val doTheReadingFileAndUpdatingRailsApp: Boolean = false
-    val doTheReadingFileAndUpdatingLocalApp: Boolean = true
+    val doTheReadingFileAndUpdatingLocalApp: Boolean = false
+    val doTheReadingFileAndUpdatingReworkNodeApp: Boolean = true
     val printThrowablesCollected: Boolean = false
     val pagesToBeFetched: Int = 100
     // we observed that 1000 series means ~7160 rows to store (series + seasons)
@@ -56,9 +58,17 @@ object Main {
         val json = Json.parse(scala.io.Source.fromFile("data.json").mkString)
         logger(this).info("--- Reading the JSON done")
         logger(this).info("--- Inserting into the local db...")
-        neoDbAccessor.insertJson(json).await()
+        neoDbAccessor.insertJson(NeoDbAccessor.Target.Local, json).await()
         logger(this).info("--- Inserting done")
       }
+      if (RunConfig.doTheReadingFileAndUpdatingReworkNodeApp) {
+        logger(this).info("--- Reading the JSON from the file...")
+        val json = Json.parse(scala.io.Source.fromFile("data.json").mkString)
+        logger(this).info("--- Reading the JSON done")
+        logger(this).info("--- Inserting into the rework node db...")
+        neoDbAccessor.insertJson(NeoDbAccessor.Target.ReworkNode, json).await()
+        logger(this).info("--- Inserting done")
+      }      
       if (RunConfig.printThrowablesCollected) {
         logger(this).info("--- Printing collected throwables...")
         collector.throwables.foreach { t =>
