@@ -16,10 +16,10 @@ import scala.util.control.NonFatal
 object Main {
 
   object RunConfig {
-    val doTheFetchingAndWritingToFile: Boolean = true
+    val doTheFetchingAndWritingToFile: Boolean = false
     val doTheReadingFileAndUpdatingRailsApp: Boolean = false
-    val doTheReadingFileAndUpdatingLocalApp: Boolean = false
-    val doTheReadingFileAndUpdatingReworkNodeApp: Boolean = false
+    val doTheReadingFileAndUpdatingLocalApp: Boolean = true
+    val doTheReadingFileAndUpdatingReworkNodeAppOnHeroku: Boolean = true
     val printThrowablesCollected: Boolean = false
     val pagesToBeFetched: Int = 100
     // we observed that 1000 series means ~7160 rows to store (series + seasons)
@@ -61,7 +61,7 @@ object Main {
         neoDbAccessor.insertJson(NeoDbAccessor.Target.Local, json).await()
         logger(this).info("--- Inserting done")
       }
-      if (RunConfig.doTheReadingFileAndUpdatingReworkNodeApp) {
+      if (RunConfig.doTheReadingFileAndUpdatingReworkNodeAppOnHeroku) {
         logger(this).info("--- Reading the JSON from the file...")
         val json = Json.parse(scala.io.Source.fromFile("data.json").mkString)
         logger(this).info("--- Reading the JSON done")
