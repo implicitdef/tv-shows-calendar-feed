@@ -14,4 +14,8 @@ object Utils {
         myLogger.info(s)
     }
 
+    fun log(t: Throwable) {
+        myLogger.error("Caught error", t)
+    }
+
 }
