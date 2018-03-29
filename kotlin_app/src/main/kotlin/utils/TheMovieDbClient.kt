@@ -1,12 +1,10 @@
 package utils
 
 import com.github.kittinunf.fuel.Fuel
-import com.github.kittinunf.fuel.core.FuelManager
-import com.github.kittinunf.fuel.core.Response
 import com.github.kittinunf.fuel.core.ResponseDeserializable
-import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result
-import com.google.gson.Gson
+import com.squareup.moshi.KotlinJsonAdapterFactory
+import com.squareup.moshi.Moshi
 import utils.Utils.threadPool
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
@@ -16,25 +14,25 @@ object TheMovieDbClient {
 
     private val apiKey = "000ffc8b6e767158ff5489a8daba11c2"
     private val baseUrl = "https://api.themoviedb.org/3"
-
+    private val moshi = Moshi.Builder()
+            .add(KotlinJsonAdapterFactory())
+            .build()
 
     data class JsonBody(
-            val origin: String
-    ) {
-        class Deserializer : ResponseDeserializable<JsonBody> {
-            override fun deserialize(content: String) =
-                Gson().fromJson(content, JsonBody::class.java)
-        }
-    }
-
+        val origin: String
+    )
 
     fun dummyCallWithCompletionStage(): CompletionStage<JsonBody> =
-        httpCall("http://httpbin.org/get")
+            httpCallGeneric("http://httpbin.org/get", JsonBody::class)
 
-    private fun httpCall(url: String): CompletionStage<JsonBody> {
-        val future = CompletableFuture<JsonBody>()
+    private fun <T: Any> httpCallGeneric(url: String, kClass: KClass<T>): CompletionStage<T> {
+        val future = CompletableFuture<T>()
+        val deserializer = object : ResponseDeserializable<T> {
+            override fun deserialize(content: String) =
+                moshi.adapter(kClass.java).fromJson(content)
+        }
         threadPool.submit {
-            Fuel.Companion.get(url).responseObject(JsonBody.Deserializer()) { _, _, result ->
+            Fuel.Companion.get(url).responseObject(deserializer) { _, _, result ->
                 when (result) {
                     is Result.Failure -> {
                         future.completeExceptionally(result.getException())
@@ -47,7 +45,6 @@ object TheMovieDbClient {
         }
         return future
     }
-
 
     /*
 

@@ -14,6 +14,10 @@ object Utils {
         myLogger.info(s)
     }
 
+    fun log(a: Any) {
+        log(a.toString())
+    }
+
     fun log(t: Throwable) {
         myLogger.error("Caught error", t)
     }
