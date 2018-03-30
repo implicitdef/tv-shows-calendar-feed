@@ -1,5 +1,5 @@
 import utils.HttpServer
-import utils.TheMovieDbClient
+import themoviedb.TheMovieDbClient
 import utils.Utils.log
 import utils.Utils.threadPool
 import java.util.concurrent.TimeUnit
@@ -25,16 +25,19 @@ val doServerStuff = HttpServer::start
 
 fun doFuturesAndHttpCallsProto() {
     log("calling...")
-    TheMovieDbClient.someHttpCall().thenApply { body ->
-        log("call completed with result ${body}")
+    TheMovieDbClient.getBestSeriesAtPage().thenApply { result ->
+        log("call completed with result $result")
+        result.forEach { (_, name) ->
+            log("--> $name")
+        }
     }.whenComplete { _, exception ->
         if (exception != null) {
             log(exception)
         }
         shutdown()
     }
-
 }
+
 fun shutdown() {
     log("Shutting down")
     threadPool.shutdown()

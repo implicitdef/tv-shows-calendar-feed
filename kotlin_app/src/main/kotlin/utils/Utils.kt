@@ -2,7 +2,10 @@ package utils
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.concurrent.CompletionStage
 import java.util.concurrent.Executors
+
+typealias CS<T> = CompletionStage<T>
 
 object Utils {
 
@@ -21,5 +24,6 @@ object Utils {
     fun log(t: Throwable) {
         myLogger.error("Caught error", t)
     }
+
 
 }

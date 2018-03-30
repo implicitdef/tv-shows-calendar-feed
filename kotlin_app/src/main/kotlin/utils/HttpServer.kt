@@ -22,6 +22,4 @@ object HttpServer {
         log("Running on port $port")
         server.start()
     }
-
-
 }
