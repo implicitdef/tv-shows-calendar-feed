@@ -1,10 +1,7 @@
-import com.squareup.moshi.KotlinJsonAdapterFactory
-import com.squareup.moshi.Moshi
 import utils.HttpServer
 import utils.TheMovieDbClient
 import utils.Utils.log
 import utils.Utils.threadPool
-import java.lang.Math.random
 import java.util.concurrent.TimeUnit
 
 /*
@@ -28,8 +25,8 @@ val doServerStuff = HttpServer::start
 
 fun doFuturesAndHttpCallsProto() {
     log("calling...")
-    TheMovieDbClient.dummyCallWithCompletionStage().thenApply { body ->
-        log("call completed with result $body")
+    TheMovieDbClient.someHttpCall().thenApply { body ->
+        log("call completed with result ${body}")
     }.whenComplete { _, exception ->
         if (exception != null) {
             log(exception)

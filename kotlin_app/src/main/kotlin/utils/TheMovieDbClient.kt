@@ -18,21 +18,55 @@ object TheMovieDbClient {
             .add(KotlinJsonAdapterFactory())
             .build()
 
+    object DiscoverEndpoint {
+        data class Result(
+            val results: List<TvShow>
+        )
+        data class TvShow(
+            val id: Int,
+            val name: String
+        )
+    }
+
+    object TvShowEndpoint {
+        data class TvShow(
+            val seasons: List<Season>
+        )
+        data class Season(
+            val season_number: Int
+        )
+    }
+
+    object SeasonEndpoint {
+        data class Season(
+            val episodes: List<Episode>
+        )
+        data class Episode(
+            val air_date: List<String>
+        )
+    }
+    
+    
     data class JsonBody(
         val origin: String
     )
 
-    fun dummyCallWithCompletionStage(): CompletionStage<JsonBody> =
+    fun someHttpCall(): CompletionStage<JsonBody> =
             httpCallGeneric("http://httpbin.org/get", JsonBody::class)
 
-    private fun <T: Any> httpCallGeneric(url: String, kClass: KClass<T>): CompletionStage<T> {
-        val future = CompletableFuture<T>()
-        val deserializer = object : ResponseDeserializable<T> {
-            override fun deserialize(content: String) =
-                moshi.adapter(kClass.java).fromJson(content)
+    private fun <T: Any> httpCallGeneric(url: String, kClass: KClass<T>): CompletionStage<T> =
+       httpCallAsString(url).thenApply { str ->
+            val obj = moshi.adapter(kClass.java).fromJson(str)
+            if (obj === null) {
+                throw IllegalStateException("Got null from JSON parsing : $str")
+            }
+           obj
         }
+
+    private fun httpCallAsString(url: String): CompletionStage<String> {
+        val future = CompletableFuture<String>()
         threadPool.submit {
-            Fuel.Companion.get(url).responseObject(deserializer) { _, _, result ->
+            Fuel.Companion.get(url).responseString{ _, _, result ->
                 when (result) {
                     is Result.Failure -> {
                         future.completeExceptionally(result.getException())
