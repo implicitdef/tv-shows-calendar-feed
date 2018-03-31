@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit
 
 /*
 TODO
-implement calls to themoviedb
+// replace completionstage par kovenant
 then mash them together to have a draft of the process
 then handle throttling/retry
 then do upload to postgres
