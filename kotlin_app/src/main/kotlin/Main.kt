@@ -1,5 +1,6 @@
 import utils.HttpServer
 import themoviedb.TheMovieDbClient
+import utils.Serie
 import utils.Utils.log
 import utils.Utils.threadPool
 import java.util.concurrent.TimeUnit
@@ -25,10 +26,20 @@ val doServerStuff = HttpServer::start
 
 fun doFuturesAndHttpCallsProto() {
     log("calling...")
-    TheMovieDbClient.getBestSeriesAtPage().thenApply { result ->
-        log("call completed with result $result")
-        result.forEach { (_, name) ->
-            log("--> $name")
+    val TBBT = Serie(1418, "The Big Bang Theory")
+    TheMovieDbClient.getBestSeriesAtPage().thenApply {
+        it.forEach { (id, name) ->
+            log("$id --> $name")
+        }
+    }.thenCompose {
+        TheMovieDbClient.getSeasonsNumbers(TBBT).thenApply {
+            it.forEach { n ->
+                log("$TBBT S$n")
+            }
+        }
+    }.thenCompose {
+        TheMovieDbClient.getSeasonsTimeRange(TBBT, 11).thenApply {
+            log("$TBBT S11 ===> $it")
         }
     }.whenComplete { _, exception ->
         if (exception != null) {

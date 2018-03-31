@@ -78,33 +78,6 @@ object TheMovieDbClient {
                 }
             }
 
-
-
-    /*
-
-   def getSeasonsTimeRange(serie: Serie, season: Int)(implicit e: ExecutionContext, c: Collector): Future[Option[TimeRange]] =
-    callWithBackoff(s"$baseUrl/tv/${serie.id}/season/$season").map {
-      _
-        .as[SeasonEndpoint.Season]
-        .episodes.map(_.air_date)
-        .flatMap { maybeAirDate =>
-          if (maybeAirDate.isEmpty)
-            c.push(s"No air_date for an episode of ${serie.name} season $season")
-          maybeAirDate
-        }
-        .flatMap(d => swallowing(classOf[DateTimeParseException])(LocalDate.parse(d)))
-        .sorted
-      match {
-        case Seq() =>
-          c.push(s"${serie.name} season $season has zero episodes")
-          None
-        case seq =>
-          Some(TimeRange(seq.head, seq.last))
-      }
-    }
-
-     */
-
     private fun <T : Any> httpCallGeneric(
         path: String,
         kClass: KClass<T>,
@@ -125,15 +98,18 @@ object TheMovieDbClient {
         val future = CompletableFuture<String>()
         val params = listOf("api_key" to apiKey).plus(extraParams)
         val url = "$baseUrl$path"
+        log(">> $url")
         threadPool.submit {
             Fuel.Companion
                 .get(url, params)
-                .responseString { _, _, result ->
+                .responseString { _, response, result ->
+                    log("<< ${response.statusCode}")
                     when (result) {
                         is Result.Failure -> {
                             future.completeExceptionally(result.getException())
                         }
                         is Result.Success -> {
+
                             future.complete(result.get())
                         }
                     }
