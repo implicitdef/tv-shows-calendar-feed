@@ -1,5 +1,7 @@
 package utils
 
+import com.squareup.moshi.KotlinJsonAdapterFactory
+import com.squareup.moshi.Moshi
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
@@ -13,6 +15,11 @@ object Utils {
     private val myLogger: Logger = LoggerFactory.getLogger("myapp")
 
     val threadPool = Executors.newCachedThreadPool()
+
+    val moshi = Moshi.Builder()
+        .add(KotlinJsonAdapterFactory())
+        .build()
+
 
     fun log(s: String) {
         myLogger.info(s)
@@ -35,8 +42,5 @@ object Utils {
                 listOfCF.map { it.join() }
             }
     }
-
-
-
 
 }

@@ -1,35 +1,24 @@
 package themoviedb
 
-import com.github.kittinunf.fuel.Fuel
-import com.github.kittinunf.result.Result
-import com.squareup.moshi.KotlinJsonAdapterFactory
-import com.squareup.moshi.Moshi
+import services.HttpService
 import utils.CS
 import utils.Serie
 import utils.TimeRange
 import utils.Utils.log
-import utils.Utils.threadPool
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
-import java.util.concurrent.CompletableFuture
-import kotlin.reflect.KClass
 
 object TheMovieDbClient {
 
     private val apiKey = "000ffc8b6e767158ff5489a8daba11c2"
     private val baseUrl = "https://api.themoviedb.org/3"
-    private val moshi = Moshi.Builder()
-        .add(KotlinJsonAdapterFactory())
-        .build()
 
-    data class JsonBody(
-        val origin: String
-    )
 
     fun getBestSeriesAtPage(page: Int = 1): CS<List<Serie>> =
-        httpCallGeneric(
-            "/discover/tv",
+        HttpService.httpCallThrottled(
+            "$baseUrl/discover/tv",
             DiscoverEndpoint.Result::class,
+            "api_key" to apiKey,
             "sort_by" to "popularity.desc",
             "page" to page.toString()
         )
@@ -38,9 +27,10 @@ object TheMovieDbClient {
             }
 
     fun getSeasonsNumbers(serie: Serie): CS<List<Int>> =
-        httpCallGeneric(
-            "/tv/${serie.id}",
-            TvShowEndpoint.TvShow::class
+        HttpService.httpCallThrottled(
+            "$baseUrl/tv/${serie.id}",
+            TvShowEndpoint.TvShow::class,
+            "api_key" to apiKey
         )
             .thenApply {
                 it.seasons
@@ -52,13 +42,14 @@ object TheMovieDbClient {
             }
 
     fun getSeasonTimeRange(serie: Serie, season: Int): CS<TimeRange?> =
-        httpCallGeneric(
-            "/tv/${serie.id}/season/$season",
-            SeasonEndpoint.Season::class
+        HttpService.httpCallThrottled(
+            "$baseUrl/tv/${serie.id}/season/$season",
+            SeasonEndpoint.Season::class,
+            "api_key" to apiKey
         )
             .thenApply {
                 it.episodes
-                    .map { it.air_date}
+                    .map { it.air_date }
                     .filterNotNull()
                     .map {
                         try {
@@ -77,44 +68,4 @@ object TheMovieDbClient {
                     TimeRange(it.first(), it.last())
                 }
             }
-
-    private fun <T : Any> httpCallGeneric(
-        path: String,
-        kClass: KClass<T>,
-        vararg extraParams: Pair<String, String>
-    ): CS<T> =
-        httpCallAsString(path, *extraParams).thenApply { str ->
-            val obj = moshi.adapter(kClass.java).fromJson(str)
-            if (obj === null) {
-                throw IllegalStateException("Got null from JSON parsing : $str")
-            }
-            obj
-        }
-
-    private fun httpCallAsString(
-        path: String,
-        vararg extraParams: Pair<String, String>
-    ): CS<String> {
-        val future = CompletableFuture<String>()
-        val params = listOf("api_key" to apiKey).plus(extraParams)
-        val url = "$baseUrl$path"
-        log(">> $url")
-        threadPool.submit {
-            Fuel.Companion
-                .get(url, params)
-                .responseString { _, response, result ->
-                    log("<< ${response.statusCode}")
-                    when (result) {
-                        is Result.Failure -> {
-                            future.completeExceptionally(result.getException())
-                        }
-                        is Result.Success -> {
-
-                            future.complete(result.get())
-                        }
-                    }
-                }
-        }
-        return future
-    }
 }

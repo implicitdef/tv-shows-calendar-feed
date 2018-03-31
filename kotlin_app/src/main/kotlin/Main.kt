@@ -1,14 +1,14 @@
 import services.FetchingService
 import utils.HttpServer
-import themoviedb.TheMovieDbClient
-import utils.Serie
 import utils.Utils.log
 import utils.Utils.threadPool
+import java.util.concurrent.DelayQueue
 import java.util.concurrent.TimeUnit
 
 /*
 TODO
-then handle throttling/retry https://stackoverflow.com/questions/1407113/throttling-method-calls-to-m-requests-in-n-seconds
+fix the throttler : it limits to N calls at once, but not to N calls in M time
+https://stackoverflow.com/questions/1407113/throttling-method-calls-to-m-requests-in-n-seconds
 then do upload to postgres
 then rework that as a webapp with the task running periodically
 */
@@ -17,13 +17,16 @@ data class Something(val foo: List<Int>)
 
 fun main(args: Array<String>) {
     log("Starting the app")
-    doFuturesAndHttpCallsProto()
-    //HttpServer.start()
+    doSomeKindOfFetching()
+    //doServerStuff()
 }
+
+
+
 
 val doServerStuff = HttpServer::start
 
-fun doFuturesAndHttpCallsProto() {
+fun doSomeKindOfFetching() {
     log("calling...")
     FetchingService.fetch(pageToFetch = 2).thenApply { seriesWithSeasons ->
         log("Fetched ${seriesWithSeasons.size} seasons")
