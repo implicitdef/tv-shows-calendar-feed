@@ -51,7 +51,7 @@ object TheMovieDbClient {
                 emptyList()
             }
 
-    fun getSeasonsTimeRange(serie: Serie, season: Int): CS<TimeRange?> =
+    fun getSeasonTimeRange(serie: Serie, season: Int): CS<TimeRange?> =
         httpCallGeneric(
             "/tv/${serie.id}/season/$season",
             SeasonEndpoint.Season::class

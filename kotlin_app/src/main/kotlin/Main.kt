@@ -1,3 +1,4 @@
+import services.FetchingService
 import utils.HttpServer
 import themoviedb.TheMovieDbClient
 import utils.Serie
@@ -7,9 +8,7 @@ import java.util.concurrent.TimeUnit
 
 /*
 TODO
-// replace completionstage par kovenant
-then mash them together to have a draft of the process
-then handle throttling/retry
+then handle throttling/retry https://stackoverflow.com/questions/1407113/throttling-method-calls-to-m-requests-in-n-seconds
 then do upload to postgres
 then rework that as a webapp with the task running periodically
 */
@@ -26,21 +25,8 @@ val doServerStuff = HttpServer::start
 
 fun doFuturesAndHttpCallsProto() {
     log("calling...")
-    val TBBT = Serie(1418, "The Big Bang Theory")
-    TheMovieDbClient.getBestSeriesAtPage().thenApply {
-        it.forEach { (id, name) ->
-            log("$id --> $name")
-        }
-    }.thenCompose {
-        TheMovieDbClient.getSeasonsNumbers(TBBT).thenApply {
-            it.forEach { n ->
-                log("$TBBT S$n")
-            }
-        }
-    }.thenCompose {
-        TheMovieDbClient.getSeasonsTimeRange(TBBT, 11).thenApply {
-            log("$TBBT S11 ===> $it")
-        }
+    FetchingService.fetch(pageToFetch = 2).thenApply { seriesWithSeasons ->
+        log("Fetched ${seriesWithSeasons.size} seasons")
     }.whenComplete { _, exception ->
         if (exception != null) {
             log(exception)
