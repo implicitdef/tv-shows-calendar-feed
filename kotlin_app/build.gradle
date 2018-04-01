@@ -39,4 +39,7 @@ dependencies {
     compile "com.github.kittinunf.fuel:fuel:$fuel_version"
     compile "com.google.code.gson:gson:2.8.2"
     compile "com.squareup.moshi:moshi-kotlin:1.5.0"
+    compile "org.springframework:spring-jdbc:5.0.4.RELEASE"
+    compile "org.apache.commons:commons-dbcp2:2.2.0"
+    compile "org.postgresql:postgresql:42.2.2"
 }
