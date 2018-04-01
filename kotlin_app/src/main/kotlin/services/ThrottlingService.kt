@@ -31,10 +31,9 @@ object ThrottlingService {
     }
 
     fun <Output> withThrottling(func: () -> CS<Output>): CS<Output> {
-        //log("Number of tokens available: ${registry.size}")
         // take a token
         // will block if there's no token available
-        val token = registry.take()
+        registry.take()
         return func().whenComplete { _, _ ->
             // Puts a token back, but it will be available only in some time
             val newToken = Token(windowLength)

@@ -1,14 +1,16 @@
+import com.squareup.moshi.Types
 import services.FetchingService
+import services.JsonSerializationService.toJson
 import utils.HttpServer
+import utils.SerieWithSeasons
 import utils.Utils.log
+import utils.Utils.moshi
 import utils.Utils.threadPool
 import java.util.concurrent.DelayQueue
 import java.util.concurrent.TimeUnit
 
 /*
 TODO
-fix the throttler : it limits to N calls at once, but not to N calls in M time
-https://stackoverflow.com/questions/1407113/throttling-method-calls-to-m-requests-in-n-seconds
 then do upload to postgres
 then rework that as a webapp with the task running periodically
 */
@@ -21,15 +23,13 @@ fun main(args: Array<String>) {
     //doServerStuff()
 }
 
-
-
-
 val doServerStuff = HttpServer::start
 
 fun doSomeKindOfFetching() {
     log("calling...")
-    FetchingService.fetch(pageToFetch = 2).thenApply { seriesWithSeasons ->
+    FetchingService.fetch(pageToFetch = 1, maxSeriesPerPage = 3).thenApply { seriesWithSeasons ->
         log("Fetched ${seriesWithSeasons.size} seasons")
+        log(toJson(seriesWithSeasons).take(100) + "...")
     }.whenComplete { _, exception ->
         if (exception != null) {
             log(exception)

@@ -7,6 +7,13 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
 import java.util.concurrent.Executors
+import com.squareup.moshi.ToJson
+import com.squareup.moshi.FromJson
+import com.squareup.moshi.JsonDataException
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 typealias CS<T> = CompletionStage<T>
 
@@ -16,7 +23,23 @@ object Utils {
 
     val threadPool = Executors.newCachedThreadPool()
 
+    object LocalDateJsonAdapter {
+        @FromJson
+        fun fromJson(str: String): LocalDate =
+            try {
+                LocalDateTime.parse(str).toLocalDate()
+            } catch (e: DateTimeParseException) {
+                throw JsonDataException(e)
+            }
+
+        @ToJson
+        fun toJson(localDate: LocalDate): String =
+            localDate.atStartOfDay().toString()
+    }
+
+
     val moshi = Moshi.Builder()
+        .add(LocalDateJsonAdapter)
         .add(KotlinJsonAdapterFactory())
         .build()
 

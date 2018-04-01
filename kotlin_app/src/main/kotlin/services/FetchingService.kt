@@ -11,16 +11,27 @@ object FetchingService {
 
     private val client = TheMovieDbClient
 
-    fun fetch(pageToFetch: Int = 100): CS<List<SerieWithSeasons>> =
+    fun fetch(
+        pageToFetch: Int = 100,
+        maxSeriesPerPage: Int? = null
+    ): CS<List<SerieWithSeasons>> =
         (1..pageToFetch)
-            .map(::fetchPage)
+            .map { fetchPage(it, maxSeriesPerPage) }
             .sequence()
             .thenApply { it.flatten() }
 
 
 
-    private fun fetchPage(pageNumber: Int): CS<List<SerieWithSeasons>> =
+    private fun fetchPage(
+        pageNumber: Int,
+        maxSeriesPerPage: Int?
+    ): CS<List<SerieWithSeasons>> =
         client.getBestSeriesAtPage(pageNumber)
+            .thenApply { series ->
+                if (maxSeriesPerPage != null)
+                    series.take(maxSeriesPerPage)
+                else series
+            }
             .thenCompose { series ->
                 series
                     .map(::fetchForSerie)
