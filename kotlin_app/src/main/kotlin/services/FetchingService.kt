@@ -5,22 +5,28 @@ import utils.CS
 import utils.Season
 import utils.Serie
 import utils.SerieWithSeasons
+import utils.Utils.log
+import utils.Utils.measureTime
 import utils.Utils.sequence
+import utils.Utils.toHumanReadableString
 
 object FetchingService {
 
     private val client = TheMovieDbClient
 
     fun fetch(
-        pageToFetch: Int = 100,
+        pagesToFetch: Int = 100,
         maxSeriesPerPage: Int? = null
     ): CS<List<SerieWithSeasons>> =
-        (1..pageToFetch)
-            .map { fetchPage(it, maxSeriesPerPage) }
-            .sequence()
-            .thenApply { it.flatten() }
-
-
+        measureTime {
+            (1..pagesToFetch)
+                .map { fetchPage(it, maxSeriesPerPage) }
+                .sequence()
+                .thenApply { it.flatten() }
+        }.thenApply { (result, time) ->
+            log("Fetched $pagesToFetch pages in ${time.toHumanReadableString()}")
+            result
+        }
 
     private fun fetchPage(
         pageNumber: Int,

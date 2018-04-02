@@ -2,6 +2,7 @@ package services
 
 import org.apache.commons.dbcp2.BasicDataSource
 import org.springframework.jdbc.core.JdbcTemplate
+import utils.Utils.log
 import javax.sql.DataSource
 
 object DbService {
@@ -33,21 +34,23 @@ object DbService {
 
     private fun buildDataSource(target: Target): DataSource {
         val dataSource = BasicDataSource()
-        dataSource.setDriverClassName("org.postgresql.Driver")
-        dataSource.setUsername(target.username)
-        dataSource.setPassword(target.password)
-        dataSource.setUrl("jdbc:postgresql://${target.host}:${target.port}/${target.database}")
-        dataSource.setValidationQuery("SELECT 1")
+        dataSource.driverClassName = "org.postgresql.Driver"
+        dataSource.username = target.username
+        dataSource.password = target.password
+        dataSource.url = "jdbc:postgresql://${target.host}:${target.port}/${target.database}"
+        dataSource.validationQuery = "SELECT 1"
         return dataSource
     }
 
     fun deleteAllJsonData(): Unit {
         val jdbcTemplate = JdbcTemplate(buildDataSource(Target.LOCAL))
+        log("Emptying the SQL table...")
         jdbcTemplate.execute("TRUNCATE raw_json_data")
     }
 
     fun insertJson(target: Target, jsonStr: String): Unit {
         val jdbcTemplate = JdbcTemplate(buildDataSource(target))
+        log("Inserting into the table...")
         jdbcTemplate.update("INSERT INTO raw_json_data (content) VALUES (?)", jsonStr)
     }
 

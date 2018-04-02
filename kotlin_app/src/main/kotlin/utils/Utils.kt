@@ -1,19 +1,19 @@
 package utils
 
+import com.squareup.moshi.FromJson
+import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.KotlinJsonAdapterFactory
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.ToJson
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.Duration
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeParseException
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
 import java.util.concurrent.Executors
-import com.squareup.moshi.ToJson
-import com.squareup.moshi.FromJson
-import com.squareup.moshi.JsonDataException
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 
 typealias CS<T> = CompletionStage<T>
 
@@ -37,12 +37,10 @@ object Utils {
             localDate.atStartOfDay().toString()
     }
 
-
     val moshi = Moshi.Builder()
         .add(LocalDateJsonAdapter)
         .add(KotlinJsonAdapterFactory())
         .build()
-
 
     fun log(s: String) {
         myLogger.info(s)
@@ -66,4 +64,24 @@ object Utils {
             }
     }
 
+    fun <T> measureTime(block: () -> CS<T>): CS<Pair<T, Duration>> {
+        val start = System.currentTimeMillis()
+        return block().thenApply { result ->
+            Pair(result, Duration.ofMillis(System.currentTimeMillis() - start))
+        }
+    }
+
+    fun Duration.toHumanReadableString(): String {
+        val nbHours = this
+            .toHours()
+        val nbMinutes = this
+            .minusHours(nbHours)
+            .toMinutes()
+        val nbSeconds = (this
+            .minusHours(nbHours)
+            .minusMinutes(nbMinutes)
+            .toMillis().toDouble() / 1000
+            )
+        return String.format("%dh %dmin %.2fs", nbHours, nbMinutes, nbSeconds)
+    }
 }
