@@ -15,7 +15,7 @@ object TheMovieDbClient {
 
 
     fun getBestSeriesAtPage(page: Int = 1): CS<List<Serie>> =
-        HttpService.httpCallThrottled(
+        HttpService.httpGetThrottled(
             "$baseUrl/discover/tv",
             DiscoverEndpoint.Result::class,
             "api_key" to apiKey,
@@ -27,7 +27,7 @@ object TheMovieDbClient {
             }
 
     fun getSeasonsNumbers(serie: Serie): CS<List<Int>> =
-        HttpService.httpCallThrottled(
+        HttpService.httpGetThrottled(
             "$baseUrl/tv/${serie.id}",
             TvShowEndpoint.TvShow::class,
             "api_key" to apiKey
@@ -42,7 +42,7 @@ object TheMovieDbClient {
             }
 
     fun getSeasonTimeRange(serie: Serie, season: Int): CS<TimeRange?> =
-        HttpService.httpCallThrottled(
+        HttpService.httpGetThrottled(
             "$baseUrl/tv/${serie.id}/season/$season",
             SeasonEndpoint.Season::class,
             "api_key" to apiKey

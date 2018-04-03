@@ -1,7 +1,5 @@
-import services.DbService
 import services.FetchingService
-import services.FileStockageService
-import services.JsonSerializationService.toJson
+import tvshowscalendar.TvShowsCalendarClient
 import utils.CS
 import utils.HttpServer
 import utils.Utils.log
@@ -10,37 +8,35 @@ import java.util.concurrent.TimeUnit
 
 /*
 TODO
-then run it fully, to produce the file
-then try to upload the file to heroku, see if it works
-then rework that as a webapp with the task running periodically
+commit/push
+then run it fully with upload to prod
+
+later :
+configure secure api key to push data in prod
+transform this into a webapp, with the task running once a week
+deploy to heroku
 */
 
 data class Something(val foo: List<Int>)
 
 fun main(args: Array<String>) {
     log("Starting the app")
-    fetchAllAndWriteToFile()
-    //fetchALittleBitAndInsertLocally()
-    //doServerStuff()
+     fetchALittleAndSendToLocalNode()
+    // fetchAllAndSendToHerokuNode()
 }
 
 val doServerStuff = HttpServer::start
 
-
-fun fetchAllAndWriteToFile() {
-
-    FetchingService.fetch().thenApply { seriesWithSeasons ->
-        FileStockageService.writeToFile(toJson(seriesWithSeasons))
+fun fetchALittleAndSendToLocalNode() {
+    FetchingService.fetch(pagesToFetch = 1, maxSeriesPerPage = 2).thenCompose { seriesWithSeasons ->
+        TvShowsCalendarClient.pushData(TvShowsCalendarClient.Target.LOCAL, seriesWithSeasons)
     }.handleMainCompletion()
 }
 
-
-fun fetchALittleBitAndInsertLocally() {
-    FetchingService.fetch(pagesToFetch = 1, maxSeriesPerPage = 3).thenApply { seriesWithSeasons ->
-        DbService.deleteAllJsonData()
-        DbService.insertJson(DbService.Target.LOCAL, toJson(seriesWithSeasons))
+fun fetchAllAndSendToHerokuNode() {
+    FetchingService.fetch().thenCompose { seriesWithSeasons ->
+        TvShowsCalendarClient.pushData(TvShowsCalendarClient.Target.HEROKU, seriesWithSeasons)
     }.handleMainCompletion()
-
 }
 
 fun <T> CS<T>.handleMainCompletion() =
