@@ -10,49 +10,21 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 /*
-TODO
-
-later :
-transform this into a webapp, with the task running once a day at 3:00 am
-deploy to heroku
+TODO monitor execution on heroku
 */
-
-val file = File("data.json")
 
 fun main(args: Array<String>) {
     log("Starting the app")
-    //Scheduler.schedule {
-    //    log("Doing something")
-    //}
-    //Thread.sleep(Long.MAX_VALUE)
-    //fetchALittleAndSendToLocalNode()
-    //fetchAllAndSendToHerokuNode()
-    //fetchAllAndWriteToFile()
-    //readFileAndUploadTHerokuNode()
-    doServerStuff()
+    Scheduler.schedule {
+        log("Starting the fetch/push")
+        FetchingService.fetch().thenCompose { seriesWithSeasons ->
+            TvShowsCalendarClient.pushData(TvShowsCalendarClient.Target.HEROKU, seriesWithSeasons)
+        }
+    }
+    HttpServer.start()
 }
 
-val doServerStuff = HttpServer::start
-
-fun fetchALittleAndSendToLocalNode() {
-    FetchingService.fetch(pagesToFetch = 1, maxSeriesPerPage = 2).thenCompose { seriesWithSeasons ->
-        TvShowsCalendarClient.pushData(TvShowsCalendarClient.Target.LOCAL, seriesWithSeasons)
-    }.handleMainCompletion()
-}
-
-fun readFileAndUploadTHerokuNode() {
-    val data = file.readText()
-    TvShowsCalendarClient.pushData(TvShowsCalendarClient.Target.HEROKU, data)
-        .handleMainCompletion()
-}
-
-fun fetchAllAndWriteToFile() {
-    FetchingService.fetch().thenApply { seriesWithSeasons ->
-        file.writeText(toJson(seriesWithSeasons))
-    }.handleMainCompletion()
-}
-
-fun fetchAllAndSendToHerokuNode() {
+fun fetchAllAndSendToHerokuNodAndKillThreadPool() {
     FetchingService.fetch().thenCompose { seriesWithSeasons ->
         TvShowsCalendarClient.pushData(TvShowsCalendarClient.Target.HEROKU, seriesWithSeasons)
     }.handleMainCompletion()
