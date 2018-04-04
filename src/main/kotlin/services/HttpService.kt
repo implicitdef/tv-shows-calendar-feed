@@ -66,7 +66,7 @@ object HttpService {
         Utils.log(">> POST $url")
         // Fuel's post() send the params in the body instead of the URL
         val paramsString = params.joinToString("&") { (key, value) ->
-            "$key=${URLEncoder.encode(value)}"
+            "$key=${URLEncoder.encode(value, "UTF-8")}"
         }
         val urlWithParams = listOf(url, paramsString).joinToString("?")
         Utils.threadPool.submit {
