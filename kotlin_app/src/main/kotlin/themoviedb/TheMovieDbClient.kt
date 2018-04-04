@@ -23,7 +23,9 @@ object TheMovieDbClient {
             "page" to page.toString()
         )
             .thenApply { result ->
-                result.results.map { Serie(it.id, it.name) }
+                result.results
+                    .filterNotNull()
+                    .map { Serie(it.id, it.name) }
             }
 
     fun getSeasonsNumbers(serie: Serie): CS<List<Int>> =

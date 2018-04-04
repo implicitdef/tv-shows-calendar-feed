@@ -1,14 +1,17 @@
 import services.FetchingService
+import services.HttpService
+import themoviedb.TheMovieDbClient
 import tvshowscalendar.TvShowsCalendarClient
 import utils.CS
 import utils.HttpServer
+import utils.Serie
 import utils.Utils.log
+import utils.Utils.sequence
 import utils.Utils.threadPool
 import java.util.concurrent.TimeUnit
 
 /*
 TODO
-commit/push
 then run it fully with upload to prod
 
 later :
@@ -46,7 +49,6 @@ fun <T> CS<T>.handleMainCompletion() =
         }
         shutdown()
     }
-
 
 fun shutdown() {
     log("Shutting down")

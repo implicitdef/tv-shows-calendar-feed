@@ -49,7 +49,6 @@ object HttpService {
                             future.completeExceptionally(result.getException())
                         }
                         is Result.Success -> {
-
                             future.complete(result.get())
                         }
                     }

@@ -2,7 +2,7 @@ package themoviedb
 
 object DiscoverEndpoint {
     data class Result(
-        val results: List<TvShow>
+        val results: List<TvShow?>
     )
 
     data class TvShow(
