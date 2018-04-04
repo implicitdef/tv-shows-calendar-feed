@@ -1,13 +1,11 @@
 import services.FetchingService
-import services.HttpService
-import themoviedb.TheMovieDbClient
+import services.JsonSerializationService.toJson
 import tvshowscalendar.TvShowsCalendarClient
 import utils.CS
 import utils.HttpServer
-import utils.Serie
 import utils.Utils.log
-import utils.Utils.sequence
 import utils.Utils.threadPool
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 /*
@@ -20,12 +18,14 @@ transform this into a webapp, with the task running once a week
 deploy to heroku
 */
 
-data class Something(val foo: List<Int>)
+val file = File("data.json")
 
 fun main(args: Array<String>) {
     log("Starting the app")
-     fetchALittleAndSendToLocalNode()
-    // fetchAllAndSendToHerokuNode()
+    //fetchALittleAndSendToLocalNode()
+    fetchAllAndSendToHerokuNode()
+    //fetchAllAndWriteToFile()
+    // readFileAndUploadTHerokuNode()
 }
 
 val doServerStuff = HttpServer::start
@@ -33,6 +33,18 @@ val doServerStuff = HttpServer::start
 fun fetchALittleAndSendToLocalNode() {
     FetchingService.fetch(pagesToFetch = 1, maxSeriesPerPage = 2).thenCompose { seriesWithSeasons ->
         TvShowsCalendarClient.pushData(TvShowsCalendarClient.Target.LOCAL, seriesWithSeasons)
+    }.handleMainCompletion()
+}
+
+fun readFileAndUploadTHerokuNode() {
+    val data = file.readText()
+    TvShowsCalendarClient.pushData(TvShowsCalendarClient.Target.HEROKU, data)
+        .handleMainCompletion()
+}
+
+fun fetchAllAndWriteToFile() {
+    FetchingService.fetch().thenApply { seriesWithSeasons ->
+        file.writeText(toJson(seriesWithSeasons))
     }.handleMainCompletion()
 }
 

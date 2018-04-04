@@ -25,11 +25,14 @@ object TvShowsCalendarClient {
         )
     }
 
-    fun pushData(target: Target, data: List<SerieWithSeasons>): CS<Unit> =
+    fun pushData(target: Target, data: String): CS<Unit> =
         HttpService.httpPost(
             target.url + "/data",
-            JsonSerializationService.toJson(data),
+            data,
             "key" to target.apiKey
         )
+
+    fun pushData(target: Target, data: List<SerieWithSeasons>): CS<Unit> =
+        pushData(target, JsonSerializationService.toJson(data))
 
 }
