@@ -11,15 +11,15 @@ import utils.Utils.log
 object HttpServer {
 
     fun start() {
-        val port = 8080
+        val port = System.getenv("PORT")?.toInt() ?: 8080
         val server = embeddedServer(Netty, port = port) {
             routing {
                 get("/") {
-                    call.respondText("Hello World!")
+                    call.respondText("Hello, this is the feed !")
                 }
             }
         }
-        log("Running on port $port")
+        log("Running on port $port...")
         server.start()
     }
 }

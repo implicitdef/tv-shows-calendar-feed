@@ -21,14 +21,15 @@ val file = File("data.json")
 
 fun main(args: Array<String>) {
     log("Starting the app")
-    Scheduler.schedule {
-        log("Doing something")
-    }
-    Thread.sleep(Long.MAX_VALUE)
+    //Scheduler.schedule {
+    //    log("Doing something")
+    //}
+    //Thread.sleep(Long.MAX_VALUE)
     //fetchALittleAndSendToLocalNode()
     //fetchAllAndSendToHerokuNode()
     //fetchAllAndWriteToFile()
-    readFileAndUploadTHerokuNode()
+    //readFileAndUploadTHerokuNode()
+    doServerStuff()
 }
 
 val doServerStuff = HttpServer::start
