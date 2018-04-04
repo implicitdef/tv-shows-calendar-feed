@@ -3,6 +3,7 @@ import services.JsonSerializationService.toJson
 import tvshowscalendar.TvShowsCalendarClient
 import utils.CS
 import utils.HttpServer
+import utils.Scheduler
 import utils.Utils.log
 import utils.Utils.threadPool
 import java.io.File
@@ -20,6 +21,10 @@ val file = File("data.json")
 
 fun main(args: Array<String>) {
     log("Starting the app")
+    Scheduler.schedule {
+        log("Doing something")
+    }
+    Thread.sleep(Long.MAX_VALUE)
     //fetchALittleAndSendToLocalNode()
     //fetchAllAndSendToHerokuNode()
     //fetchAllAndWriteToFile()
