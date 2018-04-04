@@ -21,7 +21,7 @@ object TvShowsCalendarClient {
         ),
         HEROKU(
             url = "https://tv-shows-calendar.herokuapp.com",
-            apiKey = "pushDataApiKey"
+            apiKey = "zL84m>:Y".reversed()
         )
     }
 

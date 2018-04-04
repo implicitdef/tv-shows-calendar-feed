@@ -10,11 +10,9 @@ import java.util.concurrent.TimeUnit
 
 /*
 TODO
-then run it fully with upload to prod
 
 later :
-configure secure api key to push data in prod
-transform this into a webapp, with the task running once a week
+transform this into a webapp, with the task running once a day at 3:00 am
 deploy to heroku
 */
 
@@ -23,9 +21,9 @@ val file = File("data.json")
 fun main(args: Array<String>) {
     log("Starting the app")
     //fetchALittleAndSendToLocalNode()
-    fetchAllAndSendToHerokuNode()
+    //fetchAllAndSendToHerokuNode()
     //fetchAllAndWriteToFile()
-    // readFileAndUploadTHerokuNode()
+    readFileAndUploadTHerokuNode()
 }
 
 val doServerStuff = HttpServer::start
