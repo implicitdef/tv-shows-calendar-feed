@@ -1,12 +1,10 @@
 import services.FetchingService
-import services.JsonSerializationService.toJson
 import tvshowscalendar.TvShowsCalendarClient
 import utils.CS
 import utils.HttpServer
 import utils.Scheduler
 import utils.Utils.log
 import utils.Utils.threadPool
-import java.io.File
 import java.util.concurrent.TimeUnit
 
 /*
@@ -19,22 +17,28 @@ fun main(args: Array<String>) {
         log("Starting the fetch/push")
         FetchingService.fetch().thenCompose { seriesWithSeasons ->
             TvShowsCalendarClient.pushData(TvShowsCalendarClient.Target.HEROKU, seriesWithSeasons)
-        }
+        }.logIfException()
     }
     HttpServer.start()
 }
 
-fun fetchAllAndSendToHerokuNodAndKillThreadPool() {
+fun fetchAllAndSendToHerokuNodAndLogAndKillThreadPool() {
     FetchingService.fetch().thenCompose { seriesWithSeasons ->
         TvShowsCalendarClient.pushData(TvShowsCalendarClient.Target.HEROKU, seriesWithSeasons)
-    }.handleMainCompletion()
+    }
+        .logIfException()
+        .shutdownThreadPoolAfter()
 }
 
-fun <T> CS<T>.handleMainCompletion() =
+fun <T> CS<T>.logIfException(): CS<T> =
     this.whenComplete { _, exception ->
         if (exception != null) {
             log(exception)
         }
+    }
+
+fun <T> CS<T>.shutdownThreadPoolAfter(): CS<T> =
+    this.whenComplete { _, exception ->
         shutdown()
     }
 
