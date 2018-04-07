@@ -42,11 +42,12 @@ object HttpService {
         Utils.threadPool.submit {
             Fuel.Companion
                 .get(url, params.toList())
-                .responseString { _, response, result ->
+                .responseString { request, response, result ->
                     Utils.log("<< ${response.statusCode}")
                     when (result) {
                         is Result.Failure -> {
-                            future.completeExceptionally(result.getException())
+                            val e = RuntimeException("Failed to get ${request.url}", result.getException())
+                            future.completeExceptionally(e)
                         }
                         is Result.Success -> {
                             future.complete(result.get())
