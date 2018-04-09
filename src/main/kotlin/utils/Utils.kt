@@ -14,8 +14,10 @@ import java.time.format.DateTimeParseException
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
 import java.util.concurrent.Executors
+import org.funktionale.either.Either
 
 typealias CS<T> = CompletionStage<T>
+typealias E<L, R> = Either<L, R>
 
 object Utils {
 
@@ -44,6 +46,10 @@ object Utils {
 
     fun log(s: String) {
         myLogger.info(s)
+    }
+
+    fun warn(s: String) {
+        myLogger.warn(s)
     }
 
     fun log(a: Any) {

@@ -1,10 +1,12 @@
 package themoviedb
 
+import org.funktionale.either.Either.Left
+import org.funktionale.either.Either.Right
 import services.HttpService
 import utils.CS
 import utils.Serie
 import utils.TimeRange
-import utils.Utils.log
+import utils.Utils.warn
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
@@ -22,10 +24,17 @@ object TheMovieDbClient {
             "sort_by" to "popularity.desc",
             "page" to page.toString()
         )
-            .thenApply { result ->
-                result.results
-                    .filterNotNull()
-                    .map { Serie(it.id, it.name) }
+            .thenApply {
+                when (it) {
+                    is Right ->
+                        it.right().get().results
+                            .filterNotNull()
+                            .map { Serie(it.id, it.name) }
+                    is Left -> {
+                        warn("NotFound when fetching series at page $page")
+                        emptyList()
+                    }
+                }
             }
 
     fun getSeasonsNumbers(serie: Serie): CS<List<Int>> =
@@ -35,11 +44,18 @@ object TheMovieDbClient {
             "api_key" to apiKey
         )
             .thenApply {
-                it.seasons
-                    .map { it.season_number }
-                    .filterNot { it == 0 }
+                when (it) {
+                    is Right ->
+                        it.right().get().seasons
+                            .map { it.season_number }
+                            .filterNot { it == 0 }
+                    is Left -> {
+                        warn("NotFound when fetching season numbers of serie $serie")
+                        emptyList()
+                    }
+                }
             }.exceptionally {
-                log("Failed to parse the season numbers of tvShow ${serie.name}")
+                warn("Failed to parse the season numbers of tvShow $serie")
                 emptyList()
             }
 
@@ -50,21 +66,28 @@ object TheMovieDbClient {
             "api_key" to apiKey
         )
             .thenApply {
-                it.episodes
-                    .map { it.air_date }
-                    .filterNotNull()
-                    .map {
-                        try {
-                            LocalDate.parse(it)
-                        } catch (e: DateTimeParseException) {
-                            null
-                        }
+                when (it) {
+                    is Right ->
+                        it.right().get().episodes
+                            .map { it.air_date }
+                            .filterNotNull()
+                            .map {
+                                try {
+                                    LocalDate.parse(it)
+                                } catch (e: DateTimeParseException) {
+                                    null
+                                }
+                            }
+                            .filterNotNull()
+                            .sorted()
+                    is Left -> {
+                        warn("NotFound when fetching season $season of serie $serie")
+                        emptyList()
                     }
-                    .filterNotNull()
-                    .sorted()
+                }
             }.thenApply {
                 if (it.isEmpty()) {
-                    log("${serie.name} season $season has zero episodes")
+                    warn("${serie.name} season $season has zero episodes")
                     null
                 } else {
                     TimeRange(it.first(), it.last())

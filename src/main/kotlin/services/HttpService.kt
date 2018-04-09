@@ -2,7 +2,10 @@ package services
 
 import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.result.Result
+import org.funktionale.either.Either.Left
+import org.funktionale.either.Either.Right
 import utils.CS
+import utils.E
 import utils.Utils
 import utils.Utils.moshi
 import java.net.URLEncoder
@@ -11,11 +14,13 @@ import kotlin.reflect.KClass
 
 object HttpService {
 
+    object NotFound
+
     fun <T : Any> httpGetThrottled(
         url: String,
         kClass: KClass<T>,
         vararg params: Pair<String, String>
-    ): CS<T> =
+    ): CS<E<NotFound, T>> =
         ThrottlingService.withThrottling {
             httpGet(url, kClass, *params)
         }
@@ -24,20 +29,22 @@ object HttpService {
         url: String,
         kClass: KClass<T>,
         vararg params: Pair<String, String>
-    ): CS<T> =
-        httpGetAsString(url, *params).thenApply { str ->
-            val obj = moshi.adapter(kClass.java).fromJson(str)
-            if (obj === null) {
-                throw IllegalStateException("Got null from JSON parsing : $str")
+    ): CS<E<NotFound, T>> =
+        httpGetAsString(url, *params).thenApply { either ->
+            either.right().map { str ->
+                val obj = moshi.adapter(kClass.java).fromJson(str)
+                if (obj === null) {
+                    throw IllegalStateException("Got null from JSON parsing : $str")
+                } else obj
             }
-            obj
         }
 
+    // returns NotFound if 404, but fails on all other exceptions
     private fun httpGetAsString(
         url: String,
         vararg params: Pair<String, String>
-    ): CS<String> {
-        val future = CompletableFuture<String>()
+    ): CS<E<NotFound, String>> {
+        val future = CompletableFuture<E<NotFound, String>>()
         Utils.log(">> GET $url")
         Utils.threadPool.submit {
             Fuel.Companion
@@ -46,11 +53,15 @@ object HttpService {
                     Utils.log("<< ${response.statusCode}")
                     when (result) {
                         is Result.Failure -> {
-                            val e = RuntimeException("Failed to get ${request.url}", result.getException())
-                            future.completeExceptionally(e)
+                            if (response.statusCode == 404)
+                                future.complete(Left(NotFound))
+                            else {
+                                val e = RuntimeException("Failed to get ${request.url}", result.getException())
+                                future.completeExceptionally(e)
+                            }
                         }
                         is Result.Success -> {
-                            future.complete(result.get())
+                            future.complete(Right(result.get()))
                         }
                     }
                 }
