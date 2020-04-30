@@ -1,7 +1,2 @@
-.gradle
-build
-lib
-*.iml
-.idea
-data.json
-log
+.vscode
+node_modules
