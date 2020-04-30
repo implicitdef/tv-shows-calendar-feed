@@ -8,6 +8,10 @@
     "start": "ts-node ./src/index"
   },
   "dependencies": {
+    "@types/esrever": "^0.2.0",
+    "axios": "^0.19.2",
+    "esrever": "^0.2.0",
+    "prettier": "^2.0.5",
     "ts-node": "^8.9.1",
     "typescript": "^3.8.3"
   }
