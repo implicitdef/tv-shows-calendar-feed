@@ -19,7 +19,7 @@ type SeasonEndpointResult = {
   episodes: { air_date: string }[]
 }
 
-// TODO ajouter throttling sur tous les appels
+// TODO essayer append_response pour éviter 1 appel
 // TODO gérer tous les cas foireux que je gérais en Kotlin pour être fault tolerant
 
 export async function getBestSeriesAtPage({ page = 1 } = {}): Promise<Serie[]> {
