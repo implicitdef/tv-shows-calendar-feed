@@ -8,3 +8,13 @@ export function firstAndLast<A>(array: A[]): A[] {
 export function isDefined<A>(a: A | undefined | null): a is A {
   return a !== undefined && a !== null
 }
+
+// remove useless fields from API result
+// unsafe
+export function keepOnlyKeys<A extends {}>(a: A, ...keysToKeep: string[]): A {
+  const res: any = {}
+  keysToKeep.forEach((k) => {
+    res[k] = (a as any)[k]
+  })
+  return res
+}

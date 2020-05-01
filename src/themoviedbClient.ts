@@ -1,10 +1,8 @@
 import { reverse } from 'esrever'
 import axios from 'axios'
 import { Serie, TimeRange } from './myTypes'
-import { firstAndLast, isDefined } from './utils'
-
-const API_KEY = reverse('2c11abad8a9845ff851767e6b8cff000')
-const BASE_URL = 'https://api.themoviedb.org/3'
+import { firstAndLast, isDefined, keepOnlyKeys } from './utils'
+import Bottleneck from 'bottleneck'
 
 type DiscoverEndpointResult = {
   results: { id: number; name: string }[]
@@ -16,28 +14,50 @@ type SeasonEndpointResult = {
   episodes: { air_date: string | null }[]
 }
 
-async function call<R>(path: string, params: any = {}): Promise<R> {
-  const { data } = await axios.get<R>(`${BASE_URL}${path}`, {
-    params: {
-      api_key: API_KEY,
-      ...params,
-    },
+const API_KEY = reverse('2c11abad8a9845ff851767e6b8cff000')
+const BASE_URL = 'https://api.themoviedb.org/3'
+
+// In theory there is no rate limit on the API
+// in practice if we go too fast the server doesn't answer anymore
+const limiter = new Bottleneck({
+  maxConcurrent: 50,
+})
+
+async function call<R>(
+  log: string,
+  path: string,
+  params: any = {},
+): Promise<R> {
+  return limiter.schedule(async () => {
+    console.log(log)
+    const { data } = await axios.get<R>(`${BASE_URL}${path}`, {
+      params: {
+        api_key: API_KEY,
+        ...params,
+      },
+    })
+    return data
   })
-  return data
 }
 
 export async function getBestSeriesAtPage({ page = 1 } = {}): Promise<Serie[]> {
-  console.log('>> discover page', page)
-  const { results } = await call<DiscoverEndpointResult>('/discover/tv', {
-    sort_by: 'popularity.desc',
-    page,
-  })
-  return results
+  const { results } = await call<DiscoverEndpointResult>(
+    `>> discover page ${page}`,
+    '/discover/tv',
+    {
+      sort_by: 'popularity.desc',
+      page,
+    },
+  )
+  return results.map((serie) => keepOnlyKeys(serie, 'id', 'name'))
 }
 
 export async function getSeasonsNumbers(serie: Serie): Promise<number[]> {
   console.log('>>>> get seasons numbers of ', serie.id, serie.name)
-  const { seasons } = await call<TvShowEndpointResult>(`/tv/${serie.id}`)
+  const { seasons } = await call<TvShowEndpointResult>(
+    `>>>> get seasons numbers of ${serie.id} ${serie.name}`,
+    `/tv/${serie.id}`,
+  )
   return seasons.map((_) => _.season_number)
 }
 
@@ -45,13 +65,8 @@ export async function getSeasonTimeRange(
   serie: Serie,
   season: number,
 ): Promise<TimeRange> {
-  console.log(
-    '>>>>>> get season time range ',
-    serie.id,
-    serie.name,
-    `S${season}`,
-  )
   const { episodes } = await call<SeasonEndpointResult>(
+    `>>>>>> get season time range ${serie.id} ${serie.name} S${season}`,
     `/tv/${serie.id}/season/${season}`,
   )
   const airDates = episodes.map((_) => _.air_date).filter(isDefined)
