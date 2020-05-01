@@ -2,9 +2,9 @@ import {
   getBestSeriesAtPage,
   getSeasonsNumbers,
   getSeasonTimeRange,
-} from '../themoviedb/themoviedbClient'
-import { Serie } from '../myTypes'
-import { FullSerie } from '../myTypes'
+} from './themoviedbClient'
+import { Serie } from './myTypes'
+import { FullSerie } from './myTypes'
 
 export async function fetchAll(pagesToFetch = 100): Promise<FullSerie[]> {
   const pages = [...Array(pagesToFetch)].map((_, index) => index + 1)

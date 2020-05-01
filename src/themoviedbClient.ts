@@ -1,6 +1,7 @@
 import { reverse } from 'esrever'
 import axios from 'axios'
-import { Serie, TimeRange } from '../myTypes'
+import { Serie, TimeRange } from './myTypes'
+import { firstAndLast, isDefined } from './utils'
 
 const API_KEY = reverse('2c11abad8a9845ff851767e6b8cff000')
 const BASE_URL = 'https://api.themoviedb.org/3'
@@ -12,7 +13,7 @@ type TvShowEndpointResult = {
   seasons: { season_number: number }[]
 }
 type SeasonEndpointResult = {
-  episodes: { air_date: string }[]
+  episodes: { air_date: string | null }[]
 }
 
 // TODO gérer tous les cas foireux que je gérais en Kotlin pour être fault tolerant
@@ -57,16 +58,20 @@ export async function getSeasonTimeRange(
       },
     },
   )
-
-  const [start, end] = [episodes[0], episodes[episodes.length - 1]].map(
-    ({ air_date }) => {
-      if (!air_date.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        throw new Error(
-          `Unexpected episode date :  ${serie.id}, ${serie.name}, ${season}, ${air_date}`,
-        )
+  const airDates = episodes.map((_) => _.air_date).filter(isDefined)
+  if (airDates.length) {
+    const firstAndLastAirDate = firstAndLast(airDates)
+    const [start, end] = firstAndLastAirDate.map((airDate) => {
+      if (airDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return new Date(`${airDate}T00:00:00Z`)
       }
-      return new Date(`${air_date}T00:00:00Z`)
-    },
+      throw new Error(
+        `Unexpected episode date for serie ${serie.name} ${serie.id} at season ${season}: ${airDate}`,
+      )
+    })
+    return { start, end }
+  }
+  throw new Error(
+    `No valid episodes for serie ${serie.name} ${serie.id} at season ${season}`,
   )
-  return { start, end }
 }
