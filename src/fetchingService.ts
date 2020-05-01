@@ -12,6 +12,7 @@ export async function fetchAll(pagesToFetch = 100): Promise<FullSerie[]> {
   const series = (
     await Promise.all(pages.map((page) => fetchForPage(page)))
   ).flat()
+  console.log(`<< Success, got ${series.length}`)
   return series
 }
 
@@ -23,7 +24,7 @@ async function fetchForPage(page: number): Promise<FullSerie[]> {
         try {
           const fullSerie = await fetchForSerie(serie)
           console.log(
-            '<< Success for serie',
+            '<<<< Success for serie',
             fullSerie.id,
             fullSerie.name,
             `(${fullSerie.seasons.length} seasons)`,
