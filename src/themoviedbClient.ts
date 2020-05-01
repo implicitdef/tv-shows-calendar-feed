@@ -16,8 +16,6 @@ type SeasonEndpointResult = {
   episodes: { air_date: string | null }[]
 }
 
-// TODO gérer tous les cas foireux que je gérais en Kotlin pour être fault tolerant
-
 export async function getBestSeriesAtPage({ page = 1 } = {}): Promise<Serie[]> {
   const {
     data: { results },

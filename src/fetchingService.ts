@@ -5,6 +5,7 @@ import {
 } from './themoviedbClient'
 import { Serie } from './myTypes'
 import { FullSerie } from './myTypes'
+import { isDefined } from './utils'
 
 export async function fetchAll(pagesToFetch = 100): Promise<FullSerie[]> {
   const pages = [...Array(pagesToFetch)].map((_, index) => index + 1)
@@ -16,22 +17,47 @@ export async function fetchAll(pagesToFetch = 100): Promise<FullSerie[]> {
 
 async function fetchForPage(page: number): Promise<FullSerie[]> {
   const series = await getBestSeriesAtPage({ page })
-  return Promise.all(series.map((serie) => fetchForSerie(serie)))
+  return (
+    await Promise.all(
+      series.map(async (serie) => {
+        try {
+          return await fetchForSerie(serie)
+        } catch (e) {
+          console.log(
+            `Discarding serie ${serie.id} ${serie.name}: ${e.message}`,
+          )
+          return null
+        }
+      }),
+    )
+  ).filter(isDefined)
 }
 
 async function fetchForSerie(serie: Serie): Promise<FullSerie> {
   const seasonsNumbers = await getSeasonsNumbers(serie)
-  const fullSeasons = await Promise.all(
-    seasonsNumbers.map(async (season) => {
-      const timeRange = await getSeasonTimeRange(serie, season)
-      return {
-        seasonNumber: season,
-        ...timeRange,
-      }
-    }),
-  )
-  return {
-    ...serie,
-    seasons: fullSeasons,
+  const fullSeasons = (
+    await Promise.all(
+      seasonsNumbers.map(async (season) => {
+        try {
+          const timeRange = await getSeasonTimeRange(serie, season)
+          return {
+            seasonNumber: season,
+            ...timeRange,
+          }
+        } catch (e) {
+          console.log(
+            `Discarding ${serie.id} ${serie.name} s${season}: ${e.message}`,
+          )
+          return null
+        }
+      }),
+    )
+  ).filter(isDefined)
+  if (fullSeasons.length) {
+    return {
+      ...serie,
+      seasons: fullSeasons,
+    }
   }
+  throw new Error(`Serie ${serie.id} ${serie.name} had no season`)
 }
