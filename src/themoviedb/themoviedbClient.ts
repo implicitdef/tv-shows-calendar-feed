@@ -1,14 +1,10 @@
 import { reverse } from 'esrever'
 import axios from 'axios'
+import { Serie, TimeRange } from '../myTypes'
 
 const API_KEY = reverse('2c11abad8a9845ff851767e6b8cff000')
 const BASE_URL = 'https://api.themoviedb.org/3'
 
-type Serie = { id: number; name: string }
-type TimeRange = {
-  start: Date
-  end: Date
-}
 type DiscoverEndpointResult = {
   results: { id: number; name: string }[]
 }
@@ -19,7 +15,6 @@ type SeasonEndpointResult = {
   episodes: { air_date: string }[]
 }
 
-// TODO essayer append_response pour éviter 1 appel
 // TODO gérer tous les cas foireux que je gérais en Kotlin pour être fault tolerant
 
 export async function getBestSeriesAtPage({ page = 1 } = {}): Promise<Serie[]> {
@@ -36,14 +31,16 @@ export async function getBestSeriesAtPage({ page = 1 } = {}): Promise<Serie[]> {
 }
 
 export async function getSeasonsNumbers(serie: Serie): Promise<number[]> {
-  const {
-    data: { seasons },
-  } = await axios.get<TvShowEndpointResult>(`${BASE_URL}/tv/${serie.id}`, {
-    params: {
-      api_key: API_KEY,
+  const { data } = await axios.get<TvShowEndpointResult>(
+    `${BASE_URL}/tv/${serie.id}`,
+    {
+      params: {
+        api_key: API_KEY,
+        append_to_response: 'seasdons',
+      },
     },
-  })
-  return seasons.map((_) => _.season_number)
+  )
+  return data.seasons.map((_) => _.season_number)
 }
 
 export async function getSeasonTimeRange(
@@ -62,8 +59,14 @@ export async function getSeasonTimeRange(
   )
 
   const [start, end] = [episodes[0], episodes[episodes.length - 1]].map(
-    // TODO revoir ce parsing, c'est probablement pas fonctionnel
-    ({ air_date }) => new Date(air_date),
+    ({ air_date }) => {
+      if (!air_date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        throw new Error(
+          `Unexpected episode date :  ${serie.id}, ${serie.name}, ${season}, ${air_date}`,
+        )
+      }
+      return new Date(`${air_date}T00:00:00Z`)
+    },
   )
   return { start, end }
 }

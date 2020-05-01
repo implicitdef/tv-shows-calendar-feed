@@ -1,5 +1,14 @@
-import { getBestSeriesAtPage } from './themoviedb/themoviedbClient'
+import {
+  getBestSeriesAtPage,
+  getSeasonsNumbers,
+  getSeasonTimeRange,
+} from './themoviedb/themoviedbClient'
+import { fetchAll } from './services/fetchingService'
 
-console.log('foo')
+async function start() {
+  const breakingBad = { id: 1396, name: 'Breaking Bad' }
+  const res = await fetchAll(2)
+  console.log(res)
+}
 
-getBestSeriesAtPage()
+start()
