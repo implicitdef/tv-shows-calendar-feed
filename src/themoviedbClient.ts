@@ -20,8 +20,8 @@ const BASE_URL = 'https://api.themoviedb.org/3'
 // In theory there is no rate limit on the API
 // in practice if we go too fast the server doesn't answer anymore
 const limiter = new Bottleneck({
-  maxConcurrent: 20,
-  minTime: 200,
+  maxConcurrent: 10,
+  minTime: 20,
 })
 
 async function withRetry<A>(
@@ -29,8 +29,8 @@ async function withRetry<A>(
   { nbTries = 0, timeoutBeforeRetry = 100 } = {},
 ): Promise<A> {
   try {
-    if (nbTries > 0) console.log(`RETRYING something for the ${nbTries}th time`)
-    return func()
+    if (nbTries > 0) console.log(`Retrying something for the ${nbTries}th time`)
+    return await func()
   } catch (e) {
     if (e.message.includes('timeout')) {
       await timeoutPromise(timeoutBeforeRetry)
@@ -49,16 +49,21 @@ async function call<R>(
   path: string,
   params: any = {},
 ): Promise<R> {
-  return limiter.schedule(async () => {
-    console.log(log)
-    const { data } = await axios.get<R>(`${BASE_URL}${path}`, {
-      timeout: 1000,
-      params: {
-        api_key: API_KEY,
-        ...params,
-      },
+  // We're unable to find a perfect rate for the limiter
+  // we will still get timeouts from time to time
+  // so we put a retry logic on top of it
+  return withRetry(async () => {
+    return limiter.schedule(async () => {
+      console.log(log)
+      const { data } = await axios.get<R>(`${BASE_URL}${path}`, {
+        timeout: 1000,
+        params: {
+          api_key: API_KEY,
+          ...params,
+        },
+      })
+      return data
     })
-    return data
   })
 }
 
