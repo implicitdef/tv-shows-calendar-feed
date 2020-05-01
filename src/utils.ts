@@ -18,3 +18,7 @@ export function keepOnlyKeys<A extends {}>(a: A, ...keysToKeep: string[]): A {
   })
   return res
 }
+
+export function timeoutPromise(delay: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, delay))
+}

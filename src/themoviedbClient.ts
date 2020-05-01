@@ -1,7 +1,7 @@
 import { reverse } from 'esrever'
 import axios from 'axios'
 import { Serie, TimeRange } from './myTypes'
-import { firstAndLast, isDefined, keepOnlyKeys } from './utils'
+import { firstAndLast, isDefined, keepOnlyKeys, timeoutPromise } from './utils'
 import Bottleneck from 'bottleneck'
 
 type DiscoverEndpointResult = {
@@ -20,9 +20,29 @@ const BASE_URL = 'https://api.themoviedb.org/3'
 // In theory there is no rate limit on the API
 // in practice if we go too fast the server doesn't answer anymore
 const limiter = new Bottleneck({
-  maxConcurrent: 50,
-  minTime: 20,
+  maxConcurrent: 20,
+  minTime: 200,
 })
+
+async function withRetry<A>(
+  func: () => Promise<A>,
+  { nbTries = 0, timeoutBeforeRetry = 100 } = {},
+): Promise<A> {
+  try {
+    if (nbTries > 0) console.log(`RETRYING something for the ${nbTries}th time`)
+    return func()
+  } catch (e) {
+    if (e.message.includes('timeout')) {
+      await timeoutPromise(timeoutBeforeRetry)
+      return withRetry(func, {
+        nbTries: nbTries + 1,
+        // timeout increases exponentially, with a bit of randomness
+        timeoutBeforeRetry: timeoutBeforeRetry * (2 + Math.random()),
+      })
+    }
+    throw e
+  }
+}
 
 async function call<R>(
   log: string,
@@ -32,6 +52,7 @@ async function call<R>(
   return limiter.schedule(async () => {
     console.log(log)
     const { data } = await axios.get<R>(`${BASE_URL}${path}`, {
+      timeout: 1000,
       params: {
         api_key: API_KEY,
         ...params,
