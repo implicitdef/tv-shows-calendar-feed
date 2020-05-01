@@ -1,14 +1,11 @@
-import {
-  getBestSeriesAtPage,
-  getSeasonsNumbers,
-  getSeasonTimeRange,
-} from './themoviedbClient'
-import { fetchAll, fetchForPage } from './fetchingService'
+import { fetchAll } from './fetchingService'
+import { pushData } from './tvShowsCalendarClient'
 
 async function start() {
   try {
-    const mm = await fetchAll()
-    console.log('OK', mm)
+    const data = await fetchAll(5)
+    await pushData('local', data)
+    console.log('All done')
   } catch (err) {
     console.log(err)
   }

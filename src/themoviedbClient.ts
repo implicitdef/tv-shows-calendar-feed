@@ -21,6 +21,7 @@ const BASE_URL = 'https://api.themoviedb.org/3'
 // in practice if we go too fast the server doesn't answer anymore
 const limiter = new Bottleneck({
   maxConcurrent: 50,
+  minTime: 20,
 })
 
 async function call<R>(

@@ -45,20 +45,23 @@ async function fetchForSerie(serie: Serie): Promise<FullSerie> {
   const seasonsNumbers = await getSeasonsNumbers(serie)
   const fullSeasons = (
     await Promise.all(
-      seasonsNumbers.map(async (season) => {
-        try {
-          const timeRange = await getSeasonTimeRange(serie, season)
-          return {
-            seasonNumber: season,
-            ...timeRange,
+      seasonsNumbers
+        // The API often adds a weird meaningless "season 0"
+        .filter((_) => _ > 0)
+        .map(async (season) => {
+          try {
+            const timeRange = await getSeasonTimeRange(serie, season)
+            return {
+              seasonNumber: season,
+              ...timeRange,
+            }
+          } catch (e) {
+            console.log(
+              `Discarding ${serie.id} ${serie.name} s${season}: ${e.message}`,
+            )
+            return null
           }
-        } catch (e) {
-          console.log(
-            `Discarding ${serie.id} ${serie.name} s${season}: ${e.message}`,
-          )
-          return null
-        }
-      }),
+        }),
     )
   ).filter(isDefined)
   if (fullSeasons.length) {
