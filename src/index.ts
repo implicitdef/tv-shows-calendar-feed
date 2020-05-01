@@ -3,11 +3,16 @@ import {
   getSeasonsNumbers,
   getSeasonTimeRange,
 } from './themoviedbClient'
-import { fetchAll } from './fetchingService'
+import { fetchAll, fetchForPage } from './fetchingService'
 
 async function start() {
   try {
-    await fetchAll(1)
+    const mm = await Promise.all([
+      fetchForPage(1),
+      fetchForPage(2),
+      fetchForPage(3),
+    ])
+    console.log('OK', mm)
   } catch (err) {
     console.log(err)
   }

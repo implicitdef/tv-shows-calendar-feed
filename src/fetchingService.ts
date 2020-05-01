@@ -16,7 +16,7 @@ export async function fetchAll(pagesToFetch = 100): Promise<FullSerie[]> {
   return series
 }
 
-async function fetchForPage(page: number): Promise<FullSerie[]> {
+export async function fetchForPage(page: number): Promise<FullSerie[]> {
   const series = await getBestSeriesAtPage({ page })
   return (
     await Promise.all(
