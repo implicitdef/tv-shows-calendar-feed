@@ -16,48 +16,43 @@ type SeasonEndpointResult = {
   episodes: { air_date: string | null }[]
 }
 
-export async function getBestSeriesAtPage({ page = 1 } = {}): Promise<Serie[]> {
-  console.log('>> discover page', page)
-  const {
-    data: { results },
-  } = await axios.get<DiscoverEndpointResult>(`${BASE_URL}/discover/tv`, {
+async function call<R>(path: string, params: any = {}): Promise<R> {
+  const { data } = await axios.get<R>(`${BASE_URL}${path}`, {
     params: {
       api_key: API_KEY,
-      sort_by: 'popularity.desc',
-      page,
+      ...params,
     },
+  })
+  return data
+}
+
+export async function getBestSeriesAtPage({ page = 1 } = {}): Promise<Serie[]> {
+  console.log('>> discover page', page)
+  const { results } = await call<DiscoverEndpointResult>('/discover/tv', {
+    sort_by: 'popularity.desc',
+    page,
   })
   return results
 }
 
 export async function getSeasonsNumbers(serie: Serie): Promise<number[]> {
   console.log('>>>> get seasons numbers of ', serie.id, serie.name)
-  const { data } = await axios.get<TvShowEndpointResult>(
-    `${BASE_URL}/tv/${serie.id}`,
-    {
-      params: {
-        api_key: API_KEY,
-        append_to_response: 'seasdons',
-      },
-    },
-  )
-  return data.seasons.map((_) => _.season_number)
+  const { seasons } = await call<TvShowEndpointResult>(`/tv/${serie.id}`)
+  return seasons.map((_) => _.season_number)
 }
 
 export async function getSeasonTimeRange(
   serie: Serie,
   season: number,
 ): Promise<TimeRange> {
-  console.log('>>>>>> get season time range ', serie.id, serie.name, `S${season}`)
-  const {
-    data: { episodes },
-  } = await axios.get<SeasonEndpointResult>(
-    `${BASE_URL}/tv/${serie.id}/season/${season}`,
-    {
-      params: {
-        api_key: API_KEY,
-      },
-    },
+  console.log(
+    '>>>>>> get season time range ',
+    serie.id,
+    serie.name,
+    `S${season}`,
+  )
+  const { episodes } = await call<SeasonEndpointResult>(
+    `/tv/${serie.id}/season/${season}`,
   )
   const airDates = episodes.map((_) => _.air_date).filter(isDefined)
   if (airDates.length) {
