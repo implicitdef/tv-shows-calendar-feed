@@ -17,6 +17,7 @@ type SeasonEndpointResult = {
 }
 
 export async function getBestSeriesAtPage({ page = 1 } = {}): Promise<Serie[]> {
+  console.log('>> discover page', page)
   const {
     data: { results },
   } = await axios.get<DiscoverEndpointResult>(`${BASE_URL}/discover/tv`, {
@@ -30,6 +31,7 @@ export async function getBestSeriesAtPage({ page = 1 } = {}): Promise<Serie[]> {
 }
 
 export async function getSeasonsNumbers(serie: Serie): Promise<number[]> {
+  console.log('>> get seasons numbers of ', serie.id, serie.name)
   const { data } = await axios.get<TvShowEndpointResult>(
     `${BASE_URL}/tv/${serie.id}`,
     {
@@ -46,6 +48,7 @@ export async function getSeasonTimeRange(
   serie: Serie,
   season: number,
 ): Promise<TimeRange> {
+  console.log('>> get season time range ', serie.id, serie.name, `S${season}`)
   const {
     data: { episodes },
   } = await axios.get<SeasonEndpointResult>(

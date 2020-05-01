@@ -21,7 +21,14 @@ async function fetchForPage(page: number): Promise<FullSerie[]> {
     await Promise.all(
       series.map(async (serie) => {
         try {
-          return await fetchForSerie(serie)
+          const fullSerie = await fetchForSerie(serie)
+          console.log(
+            '<< Success for serie',
+            fullSerie.id,
+            fullSerie.name,
+            `(${fullSerie.seasons.length} seasons)`,
+          )
+          return fullSerie
         } catch (e) {
           console.log(
             `Discarding serie ${serie.id} ${serie.name}: ${e.message}`,
