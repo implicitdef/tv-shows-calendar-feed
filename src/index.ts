@@ -1,14 +1,7 @@
-import { fetchAll } from './fetchingService'
-import { pushData } from './tvShowsCalendarClient'
+import { async } from './deps.ts'
 
-async function start() {
-  try {
-    const data = await fetchAll()
-    await pushData('heroku', data)
-    console.log('All done')
-  } catch (err) {
-    console.log(err)
-  }
-}
-
-start()
+console.log('hello')
+;(async () => {
+  await async.delay(3000)
+  console.log('yo')
+})()

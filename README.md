@@ -1,4 +1,8 @@
 ### how to run
 
-    yarn
-    yarn start
+You need deno 1.1.0 (not tested with others).
+Check with `deno --version` and upgrade with `deno upgrade --version 1.1.0`
+
+To run it :
+
+    deno run src/index.ts
