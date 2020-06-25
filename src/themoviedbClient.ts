@@ -1,7 +1,6 @@
 import { Serie, TimeRange } from "./myTypes.ts";
 import { firstAndLast, isDefined, keepOnlyKeys, reverse } from "./utils.ts";
-import Bottleneck from "bottleneck";
-import { asyncstuff } from "./deps.ts";
+import { async } from "./deps.ts";
 
 type DiscoverEndpointResult = {
   results: { id: number; name: string }[];
@@ -16,12 +15,10 @@ type SeasonEndpointResult = {
 const API_KEY = reverse("2c11abad8a9845ff851767e6b8cff000");
 const BASE_URL = "https://api.themoviedb.org/3";
 
+// TODO restorer rate limit
+
 // In theory there is no rate limit on the API
 // in practice if we go too fast the server doesn't answer anymore
-const limiter = new Bottleneck({
-  maxConcurrent: 10,
-  minTime: 20,
-});
 
 async function withRetry<A>(
   func: () => Promise<A>,
@@ -34,7 +31,7 @@ async function withRetry<A>(
     return await func();
   } catch (e) {
     if (e.message.includes("timeout")) {
-      await asyncstuff.delay(timeoutBeforeRetry);
+      await async.delay(timeoutBeforeRetry);
       return withRetry(func, {
         nbTries: nbTries + 1,
         // timeout increases exponentially, with a bit of randomness
@@ -54,21 +51,20 @@ async function call<R>(
   // we will still get timeouts from time to time
   // so we put a retry logic on top of it
   return withRetry(async () => {
-    return limiter.schedule(async () => {
-      console.log(log);
-      const url = new URL(`${BASE_URL}${path}`);
-      Object.entries({
-        api_key: API_KEY,
-        ...params,
-      }).forEach(([k, v]) => url.searchParams.append(k, v));
-      // TODO restore timeout 1000 with abort controller if needed
-      const res = await fetch(url, {});
-      if (!res.ok) {
-        throw new Error(`HTTP response was not OK ${res.status} ${url}`);
-      }
-      const json = await res.json() as R;
-      return json;
-    });
+    // TODO ici on avait nesté le throttler à l'intérieur du retry
+    console.log(log);
+    const url = new URL(`${BASE_URL}${path}`);
+    Object.entries({
+      api_key: API_KEY,
+      ...params,
+    }).forEach(([k, v]) => url.searchParams.append(k, v));
+    // TODO restore timeout 1000 with abort controller if needed
+    const res = await fetch(url, {});
+    if (!res.ok) {
+      throw new Error(`HTTP response was not OK ${res.status} ${url}`);
+    }
+    const json = await res.json() as R;
+    return json;
   });
 }
 
