@@ -45,14 +45,13 @@ async function withRetry<A>(
 async function call<R>(
   log: string,
   path: string,
-  params: { [k: string]: string } = {},
+  params: { [k: string]: string | number } = {},
 ): Promise<R> {
   // We're unable to find a perfect rate for the limiter
   // we will still get timeouts from time to time
   // so we put a retry logic on top of it
   return withRetry(async () => {
     // TODO ici on avait nesté le throttler à l'intérieur du retry
-    console.log(log);
     const url = new URL(`${BASE_URL}${path}`);
     Object.entries({
       api_key: API_KEY,

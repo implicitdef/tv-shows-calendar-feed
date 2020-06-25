@@ -20,5 +20,5 @@ export function keepOnlyKeys<A extends {}>(a: A, ...keysToKeep: string[]): A {
 }
 
 export function reverse(s: string): string {
-  return s.split("").reverse().join();
+  return s.split("").reverse().join("");
 }

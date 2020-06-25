@@ -1,7 +1,14 @@
-import { async } from "./deps.ts";
+import { fetchAll } from "./fetchingService.ts";
+import { pushData } from "./tvShowsCalendarClient.ts";
 
-console.log("hello");
-(async () => {
-  await async.delay(3000);
-  console.log("yo");
-})();
+async function start() {
+  try {
+    const data = await fetchAll();
+    // await pushData("local", data);
+    console.log("All done");
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+start();
