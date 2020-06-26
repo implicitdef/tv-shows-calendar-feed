@@ -1,6 +1,6 @@
 import { getBestSeriesAtPage, getSeasonsNumbers, getSeasonTimeRange, } from './themoviedbClient.ts';
 import { isDefined } from './utils.ts';
-export async function fetchAll(pagesToFetch = 1) {
+export async function fetchAll(pagesToFetch = 100) {
     const pages = [...Array(pagesToFetch)].map((_, index) => index + 1);
     const series = (await Promise.all(pages.map((page) => fetchForPage(page)))).flat();
     console.log(`<< Success, got ${series.length}`);
