@@ -6,7 +6,7 @@ import {
 import { Serie, FullSerie } from './myTypes.ts'
 import { isDefined } from './utils.ts'
 
-export async function fetchAll(pagesToFetch = 1): Promise<FullSerie[]> {
+export async function fetchAll(pagesToFetch = 100): Promise<FullSerie[]> {
   const pages = [...Array(pagesToFetch)].map((_, index) => index + 1)
   const series = (
     await Promise.all(pages.map((page) => fetchForPage(page)))
