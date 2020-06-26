@@ -5,4 +5,4 @@ Check with `deno --version` and upgrade with `deno upgrade --version 1.1.0`
 
 To run it :
 
-    deno run src/index.ts
+    make run
